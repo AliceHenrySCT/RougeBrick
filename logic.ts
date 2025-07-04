@@ -38,6 +38,12 @@ export const resolveCollisionWithBounce = (info: Collision) => {
   const circleInfo = info.o1 as CircleInterface;
   const rectInfo = info.o2 as PaddleInterface | BrickInterface;
 
+  // Disable brick immediately upon collision to prevent multiple hits
+  if (rectInfo.type === "Brick") {
+    const brick = rectInfo as BrickInterface;
+    brick.canCollide.value = false;
+  }
+
   // Get rectangle dimensions based on type
   const rectWidth = rectInfo.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
   const rectHeight = rectInfo.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
@@ -115,7 +121,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
     else if (circleObject.y.value - circleObject.r < 0) {
       circleObject.y.value = circleObject.r;
       circleObject.vy = -circleObject.vy;
-      circleInfo.ay = -circleObject.ay;
+      circleObject.ay = -circleObject.ay;
     }
 
     return false;
@@ -183,9 +189,6 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
         };
       }
     }
-    const dx = o2.x.value - o1.x.value;
-    const dy = o2.y.value - o1.y.value;
-    const d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
     const circleObj = o1 as CircleInterface;
     const rectObj = o2 as PaddleInterface | BrickInterface;
@@ -204,12 +207,8 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     );
 
     if (isCollision) {
-      if (o2.type === "Brick") {
-        const brick = o2 as BrickInterface;
-        brick.canCollide.value = false;
-      }
       return {
-        collisionInfo: { o1, o2, dx, dy, d },
+        collisionInfo: { o1, o2, dx: 0, dy: 0, d: 0 },
         collided: true,
       };
     }
