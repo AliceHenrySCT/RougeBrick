@@ -4,15 +4,15 @@ const { height: windowHeight, width: windowWidth } = Dimensions.get("window");
 
 export const BALL_COLOR = "#77FF23";
 
-export const TOTAL_BRICKS = 18;
-export const BRICK_ROW_LENGTH = 3;
-export const PADDLE_HEIGHT = 50;
-export const PADDLE_WIDTH = 125;
-export const BRICK_HEIGHT = 25;
-export const BRICK_WIDTH = 80;
+export const TOTAL_BRICKS = 60; // Increased for solid wall
+export const BRICK_ROW_LENGTH = 12; // 12 bricks per row
+export const PADDLE_HEIGHT = 40;
+export const PADDLE_WIDTH = 100;
+export const BRICK_HEIGHT = 20; // Smaller bricks
+export const BRICK_WIDTH = windowWidth / 12; // Bricks span full width
 export const BRICK_MIDDLE = windowWidth / 2 - BRICK_WIDTH / 2;
 export const PADDLE_MIDDLE = windowWidth / 2 - PADDLE_WIDTH / 2;
-export const RADIUS = 16;
+export const RADIUS = 10; // Smaller ball
 export const MAX_SPEED = 40;
 
 export const height = windowHeight;

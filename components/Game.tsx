@@ -20,7 +20,6 @@ import {
 } from 'react-native-reanimated';
 import {
   BRICK_HEIGHT,
-  BRICK_MIDDLE,
   BRICK_ROW_LENGTH,
   BRICK_WIDTH,
   height,
@@ -59,7 +58,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
       width={brick.width}
       height={brick.height}
       color={color}
-      r={8}
+      r={4}
     >
       <LinearGradient
         start={vec(5, 300)}
@@ -104,18 +103,14 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
     height: PADDLE_HEIGHT,
   };
 
-  // Generate bricks
+  // Generate bricks in a solid wall formation
   const bricks: BrickInterface[] = Array(TOTAL_BRICKS)
     .fill(0)
     .map((_, idx) => {
-      const xPositions = [
-        BRICK_MIDDLE + BRICK_WIDTH + 50,
-        BRICK_MIDDLE,
-        BRICK_MIDDLE - BRICK_WIDTH - 50,
-      ];
       const row = Math.floor(idx / BRICK_ROW_LENGTH);
-      const x = xPositions[idx % BRICK_ROW_LENGTH];
-      const y = 60 + 45 * row;
+      const col = idx % BRICK_ROW_LENGTH;
+      const x = col * BRICK_WIDTH; // No gaps between bricks
+      const y = 60 + row * BRICK_HEIGHT; // No gaps between rows
       return {
         type: 'Brick',
         id: idx,

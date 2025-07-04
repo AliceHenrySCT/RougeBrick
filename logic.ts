@@ -1,6 +1,6 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
-import { MAX_SPEED, PADDLE_HEIGHT, PADDLE_WIDTH, RADIUS } from "./constants";
+import { MAX_SPEED, PADDLE_HEIGHT, PADDLE_WIDTH, RADIUS, BRICK_WIDTH, BRICK_HEIGHT } from "./constants";
 import {
   BrickInterface,
   CircleInterface,
@@ -157,15 +157,19 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     const d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
     const circleObj = o1 as CircleInterface;
-    const paddleObj = o2 as PaddleInterface;
+    const rectObj = o2 as PaddleInterface | BrickInterface;
+
+    // Use appropriate dimensions based on object type
+    const rectWidth = o2.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
+    const rectHeight = o2.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
     const isCollision = circleRect(
       circleObj.x.value,
       circleObj.y.value,
-      paddleObj.x.value,
-      paddleObj.y.value,
-      PADDLE_WIDTH,
-      PADDLE_HEIGHT
+      rectObj.x.value,
+      rectObj.y.value,
+      rectWidth,
+      rectHeight
     );
 
     if (isCollision) {
