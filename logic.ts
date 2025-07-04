@@ -36,17 +36,48 @@ const move = (object: ShapeInterface, dt: number) => {
 export const resolveCollisionWithBounce = (info: Collision) => {
   "worklet";
   const circleInfo = info.o1 as CircleInterface;
+  const rectInfo = info.o2 as PaddleInterface | BrickInterface;
 
-  circleInfo.y.value = circleInfo.y.value - circleInfo.r;
+  // Get rectangle dimensions based on type
+  const rectWidth = rectInfo.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
+  const rectHeight = rectInfo.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
-  if (info.o2.type === "Brick" && circleInfo.ay > 0) {
-    return;
+  // Calculate which side of the rectangle was hit
+  const ballCenterX = circleInfo.x.value;
+  const ballCenterY = circleInfo.y.value;
+  const rectCenterX = rectInfo.x.value + rectWidth / 2;
+  const rectCenterY = rectInfo.y.value + rectHeight / 2;
+
+  // Calculate overlap on each axis
+  const overlapX = (rectWidth / 2 + RADIUS) - Math.abs(ballCenterX - rectCenterX);
+  const overlapY = (rectHeight / 2 + RADIUS) - Math.abs(ballCenterY - rectCenterY);
+
+  // Determine collision side based on smallest overlap
+  if (overlapX < overlapY) {
+    // Horizontal collision (left or right side)
+    if (ballCenterX < rectCenterX) {
+      // Hit from left side
+      circleInfo.x.value = rectInfo.x.value - RADIUS;
+    } else {
+      // Hit from right side
+      circleInfo.x.value = rectInfo.x.value + rectWidth + RADIUS;
+    }
+    // Reverse horizontal velocity
+    circleInfo.vx = -circleInfo.vx;
+    circleInfo.ax = -circleInfo.ax;
+  } else {
+    // Vertical collision (top or bottom side)
+    if (ballCenterY < rectCenterY) {
+      // Hit from top side
+      circleInfo.y.value = rectInfo.y.value - RADIUS;
+    } else {
+      // Hit from bottom side
+      circleInfo.y.value = rectInfo.y.value + rectHeight + RADIUS;
+    }
+    // Reverse vertical velocity
+    circleInfo.vy = -circleInfo.vy;
+    circleInfo.ay = -circleInfo.ay;
   }
-
-  circleInfo.vx = circleInfo.vx;
-  circleInfo.ax = circleInfo.ax;
-  circleInfo.vy = -circleInfo.vy;
-  circleInfo.ay = -circleInfo.ay;
 };
 
 // Source: https://martinheinz.dev/blog/15
@@ -84,7 +115,7 @@ export const resolveWallCollision = (object: ShapeInterface) => {
     else if (circleObject.y.value - circleObject.r < 0) {
       circleObject.y.value = circleObject.r;
       circleObject.vy = -circleObject.vy;
-      circleObject.ay = -circleObject.ay;
+      circleInfo.ay = -circleObject.ay;
     }
 
     return false;
