@@ -141,7 +141,7 @@ export const createBouncingExample = (circleObject: CircleInterface) => {
   circleObject.m = RADIUS * 10;
 };
 
-// Source: https://www.jeffreythompson.org/collision-detection/table_of_contents.php
+// Improved circle-rectangle collision detection
 function circleRect(
   cx: number,
   cy: number,
@@ -151,26 +151,18 @@ function circleRect(
   rh: number
 ) {
   "worklet";
-  // temporary variables to set edges for testing
-  let testX = cx;
-  let testY = cy;
+  
+  // Find the closest point on the rectangle to the circle center
+  const closestX = Math.max(rx, Math.min(cx, rx + rw));
+  const closestY = Math.max(ry, Math.min(cy, ry + rh));
 
-  // which edge is closest?
-  if (cx < rx) testX = rx; // test left edge
-  else if (cx > rx + rw) testX = rx + rw; // right edge
-  if (cy < ry) testY = ry; // top edge
-  else if (cy > ry + rh) testY = ry + rh; // bottom edge
+  // Calculate the distance between the circle center and the closest point
+  const distanceX = cx - closestX;
+  const distanceY = cy - closestY;
+  const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
 
-  // get distance from closest edges
-  let distX = cx - testX;
-  let distY = cy - testY;
-  let distance = Math.sqrt(distX * distX + distY * distY);
-
-  // if the distance is less than the radius, collision!
-  if (distance <= RADIUS) {
-    return true;
-  }
-  return false;
+  // Check if the distance is less than the circle's radius
+  return distanceSquared < (RADIUS * RADIUS);
 }
 
 export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
