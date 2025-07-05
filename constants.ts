@@ -2,7 +2,7 @@ import { Dimensions } from "react-native";
 
 const { height: windowHeight, width: windowWidth } = Dimensions.get("window");
 
-export const BALL_COLOR = "#77FF23";
+export const BALL_COLOR = "#d1d5db"; // Light grey color
 
 export const TOTAL_BRICKS = 60; // Increased for solid wall
 export const BRICK_ROW_LENGTH = 12; // 12 bricks per row

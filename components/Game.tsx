@@ -252,7 +252,17 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
               cy={circleObject.y}
               r={RADIUS}
               color={BALL_COLOR}
-            />
+            >
+              {/* Dark grey border */}
+              <Circle
+                cx={0}
+                cy={0}
+                r={RADIUS}
+                color="#374151"
+                style="stroke"
+                strokeWidth={2}
+              />
+            </Circle>
             <RoundedRect
               x={rectangleObject.x}
               y={rectangleObject.y}
