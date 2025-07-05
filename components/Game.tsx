@@ -50,10 +50,10 @@ const resolution = vec(width, height);
 const getRowColor = (rowIndex: number, totalRows: number) => {
   'worklet';
   const progress = rowIndex / (totalRows - 1);
-  // Interpolate from purple (128, 0, 128) to blue (0, 0, 255)
-  const red = Math.round(128 * (1 - progress));
+  // Interpolate from bright purple (200, 0, 200) to blue (0, 0, 255)
+  const red = Math.round(200 * (1 - progress));
   const green = 0;
-  const blue = Math.round(128 + (127 * progress));
+  const blue = Math.round(200 + (55 * progress));
   return `rgb(${red}, ${green}, ${blue})`;
 };
 
@@ -68,7 +68,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     [brick.canCollide]
   );
   const borderColor = useDerivedValue(
-    () => (brick.canCollide.value ? '#313131' : 'transparent'),
+    () => (brick.canCollide.value ? '#1a1a1a' : 'transparent'),
     [brick.canCollide]
   );
   return (
