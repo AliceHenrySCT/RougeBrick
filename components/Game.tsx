@@ -251,7 +251,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
               opacity={opacity}
             />
             <SkiaText
-              x={20}
+              x={width / 2 - 60}
               y={height - 60}
               text={scoreText}
               font={scoreFont}
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   quitButton: {
     position: 'absolute',
     bottom: 40,
-    left: 20,
+    right: 20,
     padding: 10,
     backgroundColor: '#333',
     borderRadius: 5,
