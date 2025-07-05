@@ -48,41 +48,66 @@ export const resolveCollisionWithBounce = (info: Collision) => {
   const rectWidth = rectInfo.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
   const rectHeight = rectInfo.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
-  // Calculate which side of the rectangle was hit
-  const ballCenterX = circleInfo.x.value;
-  const ballCenterY = circleInfo.y.value;
-  const rectCenterX = rectInfo.x.value + rectWidth / 2;
-  const rectCenterY = rectInfo.y.value + rectHeight / 2;
+  const ballX = circleInfo.x.value;
+  const ballY = circleInfo.y.value;
+  const rectLeft = rectInfo.x.value;
+  const rectRight = rectInfo.x.value + rectWidth;
+  const rectTop = rectInfo.y.value;
+  const rectBottom = rectInfo.y.value + rectHeight;
 
-  // Calculate overlap on each axis
-  const overlapX = (rectWidth / 2 + RADIUS) - Math.abs(ballCenterX - rectCenterX);
-  const overlapY = (rectHeight / 2 + RADIUS) - Math.abs(ballCenterY - rectCenterY);
+  // Calculate distances to each edge
+  const distToLeft = Math.abs(ballX - rectLeft);
+  const distToRight = Math.abs(ballX - rectRight);
+  const distToTop = Math.abs(ballY - rectTop);
+  const distToBottom = Math.abs(ballY - rectBottom);
 
-  // Determine collision side based on smallest overlap
-  if (overlapX < overlapY) {
-    // Horizontal collision (left or right side)
-    if (ballCenterX < rectCenterX) {
-      // Hit from left side
-      circleInfo.x.value = rectInfo.x.value - RADIUS;
-    } else {
-      // Hit from right side
-      circleInfo.x.value = rectInfo.x.value + rectWidth + RADIUS;
+  // Find the closest edge
+  const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
+
+  // Special handling for paddle to prevent sticking
+  if (rectInfo.type === "Paddle") {
+    // For paddle, prioritize vertical collision (top hit)
+    if (ballY < rectTop + RADIUS && Math.abs(circleInfo.vy) > 0.1) {
+      // Hit from top - this is the most common case
+      circleInfo.y.value = rectTop - RADIUS - 2; // Add small buffer
+      circleInfo.vy = -Math.abs(circleInfo.vy); // Ensure upward velocity
+      circleInfo.ay = -Math.abs(circleInfo.ay);
+      
+      // Add horizontal velocity based on where ball hits paddle
+      const paddleCenter = rectLeft + rectWidth / 2;
+      const hitOffset = (ballX - paddleCenter) / (rectWidth / 2);
+      const maxAngleEffect = 3; // Maximum horizontal velocity to add
+      circleInfo.vx += hitOffset * maxAngleEffect;
+      
+      // Clamp horizontal velocity to prevent extreme angles
+      if (circleInfo.vx > MAX_SPEED * 0.8) circleInfo.vx = MAX_SPEED * 0.8;
+      if (circleInfo.vx < -MAX_SPEED * 0.8) circleInfo.vx = -MAX_SPEED * 0.8;
+      
+      return;
     }
-    // Reverse horizontal velocity
-    circleInfo.vx = -circleInfo.vx;
-    circleInfo.ax = -circleInfo.ax;
+  }
+
+  // Handle other collisions (sides and bricks)
+  if (minDist === distToLeft) {
+    // Hit left side
+    circleInfo.x.value = rectLeft - RADIUS - 1;
+    circleInfo.vx = -Math.abs(circleInfo.vx);
+    circleInfo.ax = -Math.abs(circleInfo.ax);
+  } else if (minDist === distToRight) {
+    // Hit right side
+    circleInfo.x.value = rectRight + RADIUS + 1;
+    circleInfo.vx = Math.abs(circleInfo.vx);
+    circleInfo.ax = Math.abs(circleInfo.ax);
+  } else if (minDist === distToTop) {
+    // Hit top side
+    circleInfo.y.value = rectTop - RADIUS - 1;
+    circleInfo.vy = -Math.abs(circleInfo.vy);
+    circleInfo.ay = -Math.abs(circleInfo.ay);
   } else {
-    // Vertical collision (top or bottom side)
-    if (ballCenterY < rectCenterY) {
-      // Hit from top side
-      circleInfo.y.value = rectInfo.y.value - RADIUS;
-    } else {
-      // Hit from bottom side
-      circleInfo.y.value = rectInfo.y.value + rectHeight + RADIUS;
-    }
-    // Reverse vertical velocity
-    circleInfo.vy = -circleInfo.vy;
-    circleInfo.ay = -circleInfo.ay;
+    // Hit bottom side
+    circleInfo.y.value = rectBottom + RADIUS + 1;
+    circleInfo.vy = Math.abs(circleInfo.vy);
+    circleInfo.ay = Math.abs(circleInfo.ay);
   }
 };
 
@@ -162,7 +187,8 @@ function circleRect(
   const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
 
   // Check if the distance is less than the circle's radius
-  return distanceSquared < (RADIUS * RADIUS);
+  // Add small buffer to prevent edge cases
+  return distanceSquared <= (RADIUS * RADIUS);
 }
 
 export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
@@ -189,6 +215,19 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     const rectWidth = o2.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
     const rectHeight = o2.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
+    // For paddle collisions, add velocity check to prevent sticking
+    if (o2.type === "Paddle") {
+      const ballY = circleObj.y.value;
+      const paddleTop = rectObj.y.value;
+      
+      // Only check collision if ball is moving toward paddle or very close
+      if (ballY < paddleTop - RADIUS * 2 && circleObj.vy <= 0) {
+        return {
+          collisionInfo: null,
+          collided: false,
+        };
+      }
+    }
     const isCollision = circleRect(
       circleObj.x.value,
       circleObj.y.value,
