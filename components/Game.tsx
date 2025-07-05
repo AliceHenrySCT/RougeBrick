@@ -67,6 +67,23 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         end={vec(4, 50)}
         colors={['red', 'orange']}
       />
+      {/* Add darker border */}
+      <RoundedRect
+        x={brick.x}
+        y={brick.y}
+        width={brick.width}
+        height={brick.height}
+        color="transparent"
+        style="stroke"
+        strokeWidth={1}
+        r={4}
+      >
+        <LinearGradient
+          start={vec(0, 0)}
+          end={vec(0, brick.height)}
+          colors={['#8B4513', '#654321']}
+        />
+      </RoundedRect>
     </RoundedRect>
   );
 };
