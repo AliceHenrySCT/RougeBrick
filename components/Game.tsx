@@ -48,8 +48,22 @@ const resolution = vec(width, height);
 
 // Brick component
 const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
+  // Calculate row number for color gradient
+  const row = Math.floor(idx / BRICK_ROW_LENGTH);
+  const totalRows = Math.ceil(TOTAL_BRICKS / BRICK_ROW_LENGTH);
+  
+  // Create color gradient from purple to blue based on row
+  const getRowColor = (rowIndex: number) => {
+    const progress = rowIndex / (totalRows - 1);
+    // Interpolate from purple (128, 0, 128) to blue (0, 0, 255)
+    const red = Math.round(128 * (1 - progress));
+    const green = 0;
+    const blue = Math.round(128 + (127 * progress));
+    return `rgb(${red}, ${green}, ${blue})`;
+  };
+  
   const color = useDerivedValue(
-    () => (brick.canCollide.value ? 'orange' : 'transparent'),
+    () => (brick.canCollide.value ? getRowColor(row) : 'transparent'),
     [brick.canCollide]
   );
   const borderColor = useDerivedValue(
@@ -78,11 +92,6 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         color={color}
         r={3}
       >
-        <LinearGradient
-          start={vec(5, 300)}
-          end={vec(4, 50)}
-          colors={['red', 'orange']}
-        />
       </RoundedRect>
     </>
   );
