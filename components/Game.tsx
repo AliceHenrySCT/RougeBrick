@@ -46,24 +46,25 @@ const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const resolution = vec(width, height);
 
+// Helper function to calculate row color gradient
+const getRowColor = (rowIndex: number, totalRows: number) => {
+  'worklet';
+  const progress = rowIndex / (totalRows - 1);
+  // Interpolate from purple (128, 0, 128) to blue (0, 0, 255)
+  const red = Math.round(128 * (1 - progress));
+  const green = 0;
+  const blue = Math.round(128 + (127 * progress));
+  return `rgb(${red}, ${green}, ${blue})`;
+};
+
 // Brick component
 const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
   // Calculate row number for color gradient
   const row = Math.floor(idx / BRICK_ROW_LENGTH);
   const totalRows = Math.ceil(TOTAL_BRICKS / BRICK_ROW_LENGTH);
   
-  // Create color gradient from purple to blue based on row
-  const getRowColor = (rowIndex: number) => {
-    const progress = rowIndex / (totalRows - 1);
-    // Interpolate from purple (128, 0, 128) to blue (0, 0, 255)
-    const red = Math.round(128 * (1 - progress));
-    const green = 0;
-    const blue = Math.round(128 + (127 * progress));
-    return `rgb(${red}, ${green}, ${blue})`;
-  };
-  
   const color = useDerivedValue(
-    () => (brick.canCollide.value ? getRowColor(row) : 'transparent'),
+    () => (brick.canCollide.value ? getRowColor(row, totalRows) : 'transparent'),
     [brick.canCollide]
   );
   const borderColor = useDerivedValue(
