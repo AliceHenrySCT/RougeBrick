@@ -42,6 +42,7 @@ interface GameProps {
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
 const fontStyle = { fontFamily, fontSize: 55};
 const font = matchFont(fontStyle);
+const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const resolution = vec(width, height);
 
 // Brick component
@@ -251,9 +252,9 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
             />
             <SkiaText
               x={20}
-              y={height - 40}
+              y={height - 60}
               text={scoreText}
-              font={font}
+              font={scoreFont}
               color="white"
             />
           </Canvas>
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
   quitButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 40,
     left: 20,
     padding: 10,
     backgroundColor: '#333',
