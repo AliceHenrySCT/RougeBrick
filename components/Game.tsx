@@ -75,7 +75,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         height={brick.height}
         color="transparent"
         style="stroke"
-        strokeWidth={1}
+        strokeWidth={5}
         r={4}
       >
         <LinearGradient
