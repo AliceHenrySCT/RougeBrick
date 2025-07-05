@@ -72,6 +72,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 // Main Game component
 const Game: React.FC<GameProps> = ({ onQuit }) => {
   const brickCount = useSharedValue(0);
+  const score = useSharedValue(0);
   const clock = useClock();
 
   // Circle (ball) initial state
@@ -136,6 +137,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
       brick.canCollide.value = true;
     }
     brickCount.value = 0;
+    score.value = 0;
   };
 
   // Initialize ball
@@ -158,7 +160,8 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
     animate(
       [circleObject, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
-      brickCount
+      brickCount,
+      score
     );
   });
 
@@ -194,6 +197,10 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
     () =>
       brickCount.value === TOTAL_BRICKS ? 'YOU WIN' : 'YOU LOSE',
     []
+  );
+  const scoreText = useDerivedValue(
+    () => `Score: ${score.value}`,
+    [score]
   );
   const uniforms = useDerivedValue(
     () => ({
@@ -241,6 +248,13 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
               text={gameEndingText}
               font={font}
               opacity={opacity}
+            />
+            <SkiaText
+              x={20}
+              y={height - 40}
+              text={scoreText}
+              font={font}
+              color="white"
             />
           </Canvas>
         </View>

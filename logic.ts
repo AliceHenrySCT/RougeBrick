@@ -253,7 +253,8 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
 export const animate = (
   objects: ShapeInterface[],
   timeSincePreviousFrame: number,
-  brickCount: SharedValue<number>
+  brickCount: SharedValue<number>,
+  score: SharedValue<number>
 ) => {
   "worklet";
 
@@ -284,6 +285,7 @@ export const animate = (
   for (const col of collisions) {
     if (col.o2.type === "Brick") {
       brickCount.value++;
+      score.value += 100;
     }
     resolveCollisionWithBounce(col);
   }
