@@ -68,7 +68,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     [brick.canCollide]
   );
   const borderColor = useDerivedValue(
-    () => (brick.canCollide.value ? '#4A2C17' : 'transparent'),
+    () => (brick.canCollide.value ? '#313131' : 'transparent'),
     [brick.canCollide]
   );
   return (
