@@ -22,6 +22,7 @@ import {
   BRICK_HEIGHT,
   BRICK_ROW_LENGTH,
   BRICK_WIDTH,
+  BRICK_START_Y,
   height,
   BALL_COLOR,
   PADDLE_HEIGHT,
@@ -112,7 +113,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
       const row = Math.floor(idx / BRICK_ROW_LENGTH);
       const col = idx % BRICK_ROW_LENGTH;
       const x = col * BRICK_WIDTH; // No gaps between bricks
-      const y = 60 + row * BRICK_HEIGHT; // No gaps between rows
+      const y = BRICK_START_Y + row * BRICK_HEIGHT; // No gaps between rows
       return {
         type: 'Brick',
         id: idx,
