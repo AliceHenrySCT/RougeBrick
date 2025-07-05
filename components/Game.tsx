@@ -53,38 +53,34 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     [brick.canCollide]
   );
   return (
-    <RoundedRect
-      key={idx}
-      x={brick.x}
-      y={brick.y}
-      width={brick.width}
-      height={brick.height}
-      color={color}
-      r={4}
-    >
-      <LinearGradient
-        start={vec(5, 300)}
-        end={vec(4, 50)}
-        colors={['red', 'orange']}
-      />
-      {/* Add darker border */}
+    <>
+      {/* Border layer - slightly larger dark rectangle */}
       <RoundedRect
+        key={`${idx}-border`}
         x={brick.x}
         y={brick.y}
         width={brick.width}
         height={brick.height}
-        color="transparent"
-        style="stroke"
-        strokeWidth={5}
+        color="#4A2C17"
         r={4}
+      />
+      {/* Main brick - slightly smaller to show border */}
+      <RoundedRect
+        key={idx}
+        x={brick.x.value + 1}
+        y={brick.y.value + 1}
+        width={brick.width - 2}
+        height={brick.height - 2}
+        color={color}
+        r={3}
       >
         <LinearGradient
-          start={vec(0, 0)}
-          end={vec(0, brick.height)}
-          colors={['#8B4513', '#654321']}
+          start={vec(5, 300)}
+          end={vec(4, 50)}
+          colors={['red', 'orange']}
         />
       </RoundedRect>
-    </RoundedRect>
+    </>
   );
 };
 
