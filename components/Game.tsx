@@ -52,6 +52,10 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     () => (brick.canCollide.value ? 'orange' : 'transparent'),
     [brick.canCollide]
   );
+  const borderColor = useDerivedValue(
+    () => (brick.canCollide.value ? '#4A2C17' : 'transparent'),
+    [brick.canCollide]
+  );
   return (
     <>
       {/* Border layer - slightly larger dark rectangle */}
@@ -61,7 +65,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         y={brick.y}
         width={brick.width}
         height={brick.height}
-        color="#4A2C17"
+        color={borderColor}
         r={4}
       />
       {/* Main brick - slightly smaller to show border */}
