@@ -176,7 +176,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
     if (
-      brickCount.value === TOTAL_BRICKS ||
+      brickCount.value >= 5 ||
       brickCount.value === -1
     ) {
       // Stop motion on win/lose
@@ -198,7 +198,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   const gesture = Gesture.Pan()
     .onBegin(() => {
       if (
-        brickCount.value === TOTAL_BRICKS ||
+        brickCount.value >= 5 ||
         brickCount.value === -1
       ) {
         resetGame();
@@ -211,7 +211,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   // End-of-game overlay values
   const opacity = useDerivedValue(
     () =>
-      brickCount.value === TOTAL_BRICKS ||
+      brickCount.value >= 5 ||
       brickCount.value === -1
         ? 1
         : 0,
@@ -219,12 +219,12 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   );
   const textPosition = useDerivedValue(() => {
     const endText =
-      brickCount.value === TOTAL_BRICKS ? 'YOU WIN' : 'YOU LOSE';
+      brickCount.value >= 5 ? 'YOU WIN' : 'YOU LOSE';
     return (width - font.measureText(endText).width) / 2;
   }, [brickCount]);
   const gameEndingText = useDerivedValue(
     () =>
-      brickCount.value === TOTAL_BRICKS ? 'YOU WIN' : 'YOU LOSE',
+      brickCount.value >= 5 ? 'YOU WIN' : 'YOU LOSE',
     []
   );
   const scoreText = useDerivedValue(
