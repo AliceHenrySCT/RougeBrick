@@ -1,8 +1,6 @@
 import { Dimensions } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 import { Platform } from "react-native";
-import * as Haptics from "expo-haptics";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MAX_SPEED, PADDLE_HEIGHT, PADDLE_WIDTH, RADIUS, BRICK_WIDTH, BRICK_HEIGHT } from "./constants";
 import {
   BrickInterface,
@@ -13,22 +11,6 @@ import {
 } from "./types";
 
 const { width, height } = Dimensions.get("window");
-
-// Haptic feedback function with platform check
-const triggerHapticFeedback = async () => {
-  "worklet";
-  if (Platform.OS !== 'web') {
-    try {
-      // Check if haptic is enabled in settings
-      const hapticEnabled = await AsyncStorage.getItem('hapticEnabled');
-      if (hapticEnabled === null || JSON.parse(hapticEnabled)) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-    } catch (error) {
-      // Silently fail if haptic feedback is not available
-    }
-  }
-};
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
@@ -52,7 +34,7 @@ const move = (object: ShapeInterface, dt: number) => {
   }
 };
 
-export const resolveCollisionWithBounce = (info: Collision) => {
+export const resolveCollisionWithBounce = (info: Collision, hapticEnabled: SharedValue<boolean>) => {
   "worklet";
   const circleInfo = info.o1 as CircleInterface;
   const rectInfo = info.o2 as PaddleInterface | BrickInterface;
@@ -102,8 +84,11 @@ export const resolveCollisionWithBounce = (info: Collision) => {
       if (circleInfo.vx > MAX_SPEED * 0.8) circleInfo.vx = MAX_SPEED * 0.8;
       if (circleInfo.vx < -MAX_SPEED * 0.8) circleInfo.vx = -MAX_SPEED * 0.8;
       
-      // Trigger haptic feedback for paddle hit
-      triggerHapticFeedback();
+      // Set haptic trigger for paddle hit
+      if (hapticEnabled.value) {
+        hapticEnabled.value = false; // Temporarily disable to trigger effect
+        hapticEnabled.value = true;  // Re-enable
+      }
       
       return;
     }
@@ -276,7 +261,8 @@ export const animate = (
   objects: ShapeInterface[],
   timeSincePreviousFrame: number,
   brickCount: SharedValue<number>,
-  score: SharedValue<number>
+  score: SharedValue<number>,
+  hapticEnabled: SharedValue<boolean>
 ) => {
   "worklet";
 
@@ -309,6 +295,6 @@ export const animate = (
       brickCount.value++;
       score.value += 100; // Base score per brick
     }
-    resolveCollisionWithBounce(col);
+    resolveCollisionWithBounce(col, hapticEnabled);
   }
 };

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Platform, View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import {
   Canvas,
   Circle,
@@ -127,6 +128,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const finalRoundToSave = useSharedValue(0);
   const shouldTriggerGameEnd = useSharedValue(false);
   const gameWon = useSharedValue(false);
+  const hapticEnabled = useSharedValue(true);
+  const hapticTrigger = useSharedValue(false);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -135,6 +138,47 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       onTabVisibilityChange(true);
     };
   }, [onTabVisibilityChange]);
+
+  // Load haptic setting
+  useEffect(() => {
+    const loadHapticSetting = async () => {
+      try {
+        const savedHaptic = await AsyncStorage.getItem('hapticEnabled');
+        if (savedHaptic !== null) {
+          hapticEnabled.value = JSON.parse(savedHaptic);
+        }
+      } catch (error) {
+        console.error('Error loading haptic setting:', error);
+      }
+    };
+    loadHapticSetting();
+  }, []);
+
+  // Watch for haptic trigger changes
+  useEffect(() => {
+    const checkHapticTrigger = () => {
+      if (hapticEnabled.value && Platform.OS !== 'web') {
+        try {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } catch (error) {
+          // Silently fail if haptic feedback is not available
+        }
+      }
+    };
+    
+    // Use a simple polling mechanism to detect changes
+    let lastHapticState = hapticEnabled.value;
+    const interval = setInterval(() => {
+      if (hapticEnabled.value !== lastHapticState) {
+        if (hapticEnabled.value) {
+          checkHapticTrigger();
+        }
+        lastHapticState = hapticEnabled.value;
+      }
+    }, 16); // Check every frame
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Circle (ball) initial state
   const circleObject: CircleInterface = {
@@ -292,7 +336,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       [circleObject, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
       brickCount,
-      score
+      score,
+      hapticEnabled
     );
   });
 
