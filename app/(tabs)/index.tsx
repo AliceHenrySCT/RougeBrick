@@ -11,6 +11,7 @@ export default function PlayTab() {
   const [currentScore, setCurrentScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [round, setRound] = useState(1);
+  const [tabsVisible, setTabsVisible] = useState(true);
 
   useEffect(() => {
     // Hide Android bottom nav bar and status bar for immersive gaming
@@ -82,6 +83,7 @@ export default function PlayTab() {
         onGameEnd={handleGameEnd}
         round={round}
         currentScore={currentScore}
+        onTabVisibilityChange={setTabsVisible}
       />
     );
   }

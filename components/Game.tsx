@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Platform, View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Canvas,
@@ -41,6 +42,7 @@ interface GameProps {
   onGameEnd: (score: number, won: boolean) => void;
   round: number;
   currentScore: number;
+  onTabVisibilityChange: (visible: boolean) => void;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -102,11 +104,19 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const clock = useClock();
   const gameEnded = useSharedValue(false);
+
+  // Hide tabs when game component mounts and show when unmounts
+  useEffect(() => {
+    onTabVisibilityChange(false);
+    return () => {
+      onTabVisibilityChange(true);
+    };
+  }, [onTabVisibilityChange]);
 
   // Circle (ball) initial state
   const circleObject: CircleInterface = {
@@ -176,6 +186,31 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore }) => {
   // Initialize ball
   createBouncingExample(circleObject);
 
+  // Save recent score function - moved inside component to fix scope issue
+  const saveRecentScore = async (finalScore: number, finalRound: number) => {
+    try {
+      const existingScores = await AsyncStorage.getItem('recentScores');
+      const scores = existingScores ? JSON.parse(existingScores) : [];
+      
+      const newScore = {
+        score: finalScore,
+        round: finalRound,
+        date: new Date().toISOString(),
+      };
+      
+      scores.unshift(newScore);
+      
+      // Keep only the last 10 scores
+      if (scores.length > 10) {
+        scores.splice(10);
+      }
+      
+      await AsyncStorage.setItem('recentScores', JSON.stringify(scores));
+    } catch (error) {
+      console.error('Error saving recent score:', error);
+    }
+  };
+
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
@@ -221,31 +256,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore }) => {
     .onChange(({ x }) => {
       rectangleObject.x.value = x - PADDLE_WIDTH / 2;
     });
-
-  // Save recent score function
-  const saveRecentScore = async (finalScore: number, finalRound: number) => {
-    try {
-      const existingScores = await AsyncStorage.getItem('recentScores');
-      const scores = existingScores ? JSON.parse(existingScores) : [];
-      
-      const newScore = {
-        score: finalScore,
-        round: finalRound,
-        date: new Date().toISOString(),
-      };
-      
-      scores.unshift(newScore);
-      
-      // Keep only the last 10 scores
-      if (scores.length > 10) {
-        scores.splice(10);
-      }
-      
-      await AsyncStorage.setItem('recentScores', JSON.stringify(scores));
-    } catch (error) {
-      console.error('Error saving recent score:', error);
-    }
-  };
 
   // End-of-game overlay values
   const opacity = useDerivedValue(
