@@ -109,6 +109,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const score = useSharedValue(currentScore);
   const clock = useClock();
   const gameEnded = useSharedValue(false);
+  const shouldSaveScore = useSharedValue(false);
+  const finalScoreToSave = useSharedValue(0);
+  const finalRoundToSave = useSharedValue(0);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -186,7 +189,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Initialize ball
   createBouncingExample(circleObject);
 
-  // Save recent score function - moved inside component to fix scope issue
+  // Save recent score function
   const saveRecentScore = async (finalScore: number, finalRound: number) => {
     try {
       const existingScores = await AsyncStorage.getItem('recentScores');
@@ -211,6 +214,19 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     }
   };
 
+  // Watch for score saving trigger
+  useEffect(() => {
+    const checkSaveScore = () => {
+      if (shouldSaveScore.value) {
+        saveRecentScore(finalScoreToSave.value, finalRoundToSave.value);
+        shouldSaveScore.value = false;
+      }
+    };
+    
+    const interval = setInterval(checkSaveScore, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
@@ -219,7 +235,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (brickCount.value >= TOTAL_BRICKS && !gameEnded.value) {
       gameEnded.value = true;
       // Save score to recent scores
-      saveRecentScore(score.value, round);
+      finalScoreToSave.value = score.value;
+      finalRoundToSave.value = round;
+      shouldSaveScore.value = true;
       onGameEnd(score.value, true);
       return;
     }
@@ -229,7 +247,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       brickCount.value === -1 && !gameEnded.value
     ) {
       gameEnded.value = true;
-      saveRecentScore(score.value, round);
+      finalScoreToSave.value = score.value;
+      finalRoundToSave.value = round;
+      shouldSaveScore.value = true;
       onGameEnd(score.value, false);
       return;
     }
