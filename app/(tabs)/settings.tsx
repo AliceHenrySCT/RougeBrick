@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Settings as SettingsIcon, Volume2, VolumeX, Zap, ZapOff } from 'lucide-react-native';
 
@@ -58,7 +58,7 @@ export default function SettingsTab() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <SettingsIcon size={32} color="#6200EE" />
         <Text style={styles.title}>Settings</Text>
@@ -148,7 +148,7 @@ export default function SettingsTab() {
           </Text>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -156,8 +156,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  contentContainer: {
     paddingTop: 60,
     paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
