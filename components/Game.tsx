@@ -112,6 +112,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldSaveScore = useSharedValue(false);
   const finalScoreToSave = useSharedValue(0);
   const finalRoundToSave = useSharedValue(0);
+  const shouldTriggerGameEnd = useSharedValue(false);
+  const gameWon = useSharedValue(false);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -227,6 +229,19 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     return () => clearInterval(interval);
   }, []);
 
+  // Watch for game end trigger
+  useEffect(() => {
+    const checkGameEnd = () => {
+      if (shouldTriggerGameEnd.value) {
+        onGameEnd(finalScoreToSave.value, gameWon.value);
+        shouldTriggerGameEnd.value = false;
+      }
+    };
+    
+    const interval = setInterval(checkGameEnd, 100);
+    return () => clearInterval(interval);
+  }, [onGameEnd]);
+
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
@@ -237,8 +252,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Save score to recent scores
       finalScoreToSave.value = score.value;
       finalRoundToSave.value = round;
+      gameWon.value = true;
       shouldSaveScore.value = true;
-      onGameEnd(score.value, true);
+      shouldTriggerGameEnd.value = true;
       return;
     }
     
@@ -249,8 +265,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       gameEnded.value = true;
       finalScoreToSave.value = score.value;
       finalRoundToSave.value = round;
+      gameWon.value = false;
       shouldSaveScore.value = true;
-      onGameEnd(score.value, false);
+      shouldTriggerGameEnd.value = true;
       return;
     }
     
