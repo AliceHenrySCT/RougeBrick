@@ -5,13 +5,14 @@ import Game from '@/components/Game';
 import * as NavigationBar from 'expo-navigation-bar';
 import { StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTabVisibility } from './_layout';
 
 export default function PlayTab() {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameOver'>('menu');
   const [currentScore, setCurrentScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [round, setRound] = useState(1);
-  const [tabsVisible, setTabsVisible] = useState(true);
+  const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
     // Hide Android bottom nav bar and status bar for immersive gaming

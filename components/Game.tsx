@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Platform, View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Canvas,
@@ -21,22 +20,36 @@ import {
   useFrameCallback,
 } from 'react-native-reanimated';
 import {
-  BRICK_HEIGHT,
-  BRICK_ROW_LENGTH,
-  BRICK_WIDTH,
-  BRICK_START_Y,
-  height,
-  BALL_COLOR,
-  PADDLE_HEIGHT,
-  PADDLE_MIDDLE,
-  PADDLE_WIDTH,
-  TOTAL_BRICKS,
-  width,
-  RADIUS,
+  BRICK_HEIGHT as ORIGINAL_BRICK_HEIGHT,
+  BRICK_ROW_LENGTH as ORIGINAL_BRICK_ROW_LENGTH,
+  BRICK_WIDTH as ORIGINAL_BRICK_WIDTH,
+  BRICK_START_Y as ORIGINAL_BRICK_START_Y,
+  height as ORIGINAL_HEIGHT,
+  BALL_COLOR as ORIGINAL_BALL_COLOR,
+  PADDLE_HEIGHT as ORIGINAL_PADDLE_HEIGHT,
+  PADDLE_MIDDLE as ORIGINAL_PADDLE_MIDDLE,
+  PADDLE_WIDTH as ORIGINAL_PADDLE_WIDTH,
+  TOTAL_BRICKS as ORIGINAL_TOTAL_BRICKS,
+  width as ORIGINAL_WIDTH,
+  RADIUS as ORIGINAL_RADIUS,
 } from '../constants';
 import { animate, createBouncingExample } from '../logic';
 import { BrickInterface, CircleInterface, PaddleInterface } from '../types';
 import { shader } from '../shader';
+
+// Create local variables from constants to avoid modifying originals
+const BRICK_HEIGHT = ORIGINAL_BRICK_HEIGHT;
+const BRICK_ROW_LENGTH = ORIGINAL_BRICK_ROW_LENGTH;
+const BRICK_WIDTH = ORIGINAL_BRICK_WIDTH;
+const BRICK_START_Y = ORIGINAL_BRICK_START_Y;
+const height = ORIGINAL_HEIGHT;
+const BALL_COLOR = ORIGINAL_BALL_COLOR;
+const PADDLE_HEIGHT = ORIGINAL_PADDLE_HEIGHT;
+const PADDLE_MIDDLE = ORIGINAL_PADDLE_MIDDLE;
+const PADDLE_WIDTH = ORIGINAL_PADDLE_WIDTH;
+const TOTAL_BRICKS = ORIGINAL_TOTAL_BRICKS;
+const width = ORIGINAL_WIDTH;
+const RADIUS = ORIGINAL_RADIUS;
 
 interface GameProps {
   onGameEnd: (score: number, won: boolean) => void;
