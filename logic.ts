@@ -285,7 +285,7 @@ export const animate = (
   for (const col of collisions) {
     if (col.o2.type === "Brick") {
       brickCount.value++;
-      score.value += 100;
+      score.value += 100; // Base score per brick
     }
     resolveCollisionWithBounce(col);
   }

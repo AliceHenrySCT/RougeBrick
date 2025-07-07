@@ -7,11 +7,15 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "rougebrick",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      "expo-router"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -21,16 +25,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "expo": {
-    "androidNavigationBar": {
-      "visible": "immersive-sticky",
-      "barStyle": "light-content",
-      "backgroundColor": "#000000"
-    }
-  }
+      "androidNavigationBar": {
+        "visible": "immersive-sticky",
+        "barStyle": "light-content",
+        "backgroundColor": "#000000"
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "static",
+      "bundler": "metro"
     }
   }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Platform, View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { GestureHandlerRootView, GestureDetector, Gesture } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Canvas,
   Circle,
@@ -37,7 +38,9 @@ import { BrickInterface, CircleInterface, PaddleInterface } from '../types';
 import { shader } from '../shader';
 
 interface GameProps {
-  onQuit: () => void;
+  onGameEnd: (score: number, won: boolean) => void;
+  round: number;
+  currentScore: number;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -99,10 +102,11 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onQuit }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore }) => {
   const brickCount = useSharedValue(0);
-  const score = useSharedValue(0);
+  const score = useSharedValue(currentScore);
   const clock = useClock();
+  const gameEnded = useSharedValue(false);
 
   // Circle (ball) initial state
   const circleObject: CircleInterface = {
@@ -166,7 +170,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
       brick.canCollide.value = true;
     }
     brickCount.value = 0;
-    score.value = 0;
+    gameEnded.value = false;
   };
 
   // Initialize ball
@@ -175,17 +179,30 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
-    if (
-      brickCount.value >= 5 ||
-      brickCount.value === -1
-    ) {
-      // Stop motion on win/lose
-      circleObject.ax = 0.5;
-      circleObject.ay = 1;
-      circleObject.vx = 0;
-      circleObject.vy = 0;
+    
+    // Check win condition
+    if (brickCount.value >= TOTAL_BRICKS && !gameEnded.value) {
+      gameEnded.value = true;
+      // Save score to recent scores
+      saveRecentScore(score.value, round);
+      onGameEnd(score.value, true);
       return;
     }
+    
+    // Check lose condition
+    if (
+      brickCount.value === -1 && !gameEnded.value
+    ) {
+      gameEnded.value = true;
+      saveRecentScore(score.value, round);
+      onGameEnd(score.value, false);
+      return;
+    }
+    
+    if (gameEnded.value) {
+      return;
+    }
+    
     animate(
       [circleObject, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
@@ -197,10 +214,7 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   // Paddle drag gesture
   const gesture = Gesture.Pan()
     .onBegin(() => {
-      if (
-        brickCount.value >= 5 ||
-        brickCount.value === -1
-      ) {
+      if (gameEnded.value) {
         resetGame();
       }
     })
@@ -208,10 +222,35 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
       rectangleObject.x.value = x - PADDLE_WIDTH / 2;
     });
 
+  // Save recent score function
+  const saveRecentScore = async (finalScore: number, finalRound: number) => {
+    try {
+      const existingScores = await AsyncStorage.getItem('recentScores');
+      const scores = existingScores ? JSON.parse(existingScores) : [];
+      
+      const newScore = {
+        score: finalScore,
+        round: finalRound,
+        date: new Date().toISOString(),
+      };
+      
+      scores.unshift(newScore);
+      
+      // Keep only the last 10 scores
+      if (scores.length > 10) {
+        scores.splice(10);
+      }
+      
+      await AsyncStorage.setItem('recentScores', JSON.stringify(scores));
+    } catch (error) {
+      console.error('Error saving recent score:', error);
+    }
+  };
+
   // End-of-game overlay values
   const opacity = useDerivedValue(
     () =>
-      brickCount.value >= 5 ||
+      brickCount.value >= TOTAL_BRICKS ||
       brickCount.value === -1
         ? 1
         : 0,
@@ -219,17 +258,21 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
   );
   const textPosition = useDerivedValue(() => {
     const endText =
-      brickCount.value >= 5 ? 'YOU WIN' : 'YOU LOSE';
+      brickCount.value >= TOTAL_BRICKS ? 'ROUND COMPLETE!' : 'YOU LOSE';
     return (width - font.measureText(endText).width) / 2;
   }, [brickCount]);
   const gameEndingText = useDerivedValue(
     () =>
-      brickCount.value >= 5 ? 'YOU WIN' : 'YOU LOSE',
+      brickCount.value >= TOTAL_BRICKS ? 'ROUND COMPLETE!' : 'YOU LOSE',
     []
   );
   const scoreText = useDerivedValue(
     () => `Score: ${score.value}`,
     [score]
+  );
+  const roundText = useDerivedValue(
+    () => `Round ${round}`,
+    [round]
   );
   const uniforms = useDerivedValue(
     () => ({
@@ -295,27 +338,22 @@ const Game: React.FC<GameProps> = ({ onQuit }) => {
               font={scoreFont}
               color="white"
             />
+            <SkiaText
+              x={20}
+              y={60}
+              text={roundText}
+              font={scoreFont}
+              color="white"
+            />
           </Canvas>
         </View>
       </GestureDetector>
-      <TouchableOpacity style={styles.quitButton} onPress={onQuit}>
-        <Text style={styles.quitText}>Quit</Text>
-      </TouchableOpacity>
     </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
-  quitButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    padding: 10,
-    backgroundColor: '#333',
-    borderRadius: 5,
-  },
-  quitText: { color: 'white', fontSize: 16 },
 });
 
 export default Game;
