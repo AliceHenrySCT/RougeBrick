@@ -46,7 +46,7 @@ interface GameProps {
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
-const fontStyle = { fontFamily, fontSize: 55};
+const fontStyle = { fontFamily, fontSize: 32}; // Reduced from 55 to 32
 const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const resolution = vec(width, height);
@@ -297,20 +297,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // End-of-game overlay values
   const opacity = useDerivedValue(
     () =>
-      brickCount.value >= TOTAL_BRICKS ||
-      brickCount.value === -1
+      brickCount.value >= TOTAL_BRICKS
         ? 1
         : 0,
     [brickCount]
   );
   const textPosition = useDerivedValue(() => {
-    const endText =
-      brickCount.value >= TOTAL_BRICKS ? 'ROUND COMPLETE!' : 'YOU LOSE';
+    const endText = 'ROUND COMPLETE!';
     return (width - font.measureText(endText).width) / 2;
   }, [brickCount]);
   const gameEndingText = useDerivedValue(
-    () =>
-      brickCount.value >= TOTAL_BRICKS ? 'ROUND COMPLETE!' : 'YOU LOSE',
+    () => 'ROUND COMPLETE!',
     []
   );
   const scoreText = useDerivedValue(
@@ -377,6 +374,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               text={gameEndingText}
               font={font}
               opacity={opacity}
+              color="white"
             />
             <SkiaText
               x={width / 2 - 40}
