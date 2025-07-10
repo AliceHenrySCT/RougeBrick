@@ -637,11 +637,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               />
             </Circle>
             {/* Render extra balls */}
-            {allExtraBalls.map((extraBall, index) => {
-              // Only render if ball is on screen
-              if (extraBall.x.value < -50 || extraBall.y.value < -50) return null;
-              
-              return (
+            {allExtraBalls.map((extraBall, index) => (
               <Circle
                 key={`extra-${index}`}
                 cx={extraBall.x}
@@ -659,8 +655,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
                   strokeWidth={2}
                 />
               </Circle>
-              );
-            })}
+            ))}
             <RoundedRect
               x={rectangleObject.x}
               y={rectangleObject.y}
