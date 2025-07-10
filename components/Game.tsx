@@ -639,7 +639,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       </GestureDetector>
     </GestureHandlerRootView>
   );
-
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'black' },
