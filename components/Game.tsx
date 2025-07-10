@@ -226,8 +226,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       m: 0,
       ax: 0,
       ay: 0,
-      vx: 0,
-      vy: 0,
+      vx: 1,
+      vy: 1,
     });
   }
   // Paddle initial state
