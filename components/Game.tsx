@@ -33,6 +33,7 @@ import {
   TOTAL_BRICKS,
   width,
   RADIUS,
+  MAX_SPEED,
 } from '../constants';
 import { animate, createBouncingExample } from '../logic';
 import { BrickInterface, CircleInterface, PaddleInterface } from '../types';
@@ -53,6 +54,7 @@ const fontStyle = { fontFamily, fontSize: 32}; // Reduced from 55 to 32
 const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const livesFont = matchFont({ fontFamily, fontSize: 16 });
+const speedFont = matchFont({ fontFamily, fontSize: 14 });
 const resolution = vec(width, height);
 
 // Helper function to calculate row color gradient
@@ -476,6 +478,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     () => `Lives: ${currentLives.value}`,
     [currentLives]
   );
+  const currentSpeedText = useDerivedValue(() => {
+    const speed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+    return `Speed: ${speed.toFixed(1)}`;
+  }, [circleObject.vx, circleObject.vy]);
+  const maxSpeedText = useDerivedValue(
+    () => `Max: ${MAX_SPEED}`,
+    []
+  );
   const uniforms = useDerivedValue(
     () => ({
       iResolution: resolution,
@@ -559,6 +569,20 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               text={livesText}
               font={livesFont}
               color="#FF6B6B"
+            />
+            <SkiaText
+              x={20}
+              y={height - 80}
+              text={currentSpeedText}
+              font={speedFont}
+              color="#00FF00"
+            />
+            <SkiaText
+              x={20}
+              y={height - 60}
+              text={maxSpeedText}
+              font={speedFont}
+              color="#FFFF00"
             />
           </Canvas>
         </View>
