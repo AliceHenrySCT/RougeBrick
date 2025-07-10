@@ -99,7 +99,6 @@ export default function PlayTab() {
         {currentScore === highScore && (
           <Text style={styles.newHighScore}>New High Score!</Text>
         )}
-        <Text style={styles.highScoreText}>High Score: {highScore}</Text>
         
         <TouchableOpacity style={styles.button} onPress={startNextRound}>
           <Text style={styles.buttonText}>Next Round</Text>
