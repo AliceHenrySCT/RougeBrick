@@ -337,14 +337,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Get the current velocity magnitude of the main ball
       const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
       
+      // Use a minimum speed of 5 if main ball is too slow
+      const useSpeed = Math.max(mainBallSpeed, 5);
+      
       // Random angle between -45 and 45 degrees from the main ball's direction
       const mainBallAngle = Math.atan2(circleObject.vx, -circleObject.vy);
       const angleOffset = (Math.random() - 0.5) * Math.PI / 2; // -π/4 to π/4
       const newAngle = mainBallAngle + angleOffset;
       
-      // Apply the same speed as main ball but in the new direction
-      extraBall.vx = Math.sin(newAngle) * mainBallSpeed;
-      extraBall.vy = -Math.cos(newAngle) * mainBallSpeed;
+      // Apply the speed (minimum 5) in the new direction
+      extraBall.vx = Math.sin(newAngle) * useSpeed;
+      extraBall.vy = -Math.cos(newAngle) * useSpeed;
       
       // Copy acceleration from main ball
       extraBall.ax = circleObject.ax;
