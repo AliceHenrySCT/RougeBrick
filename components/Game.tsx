@@ -507,7 +507,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               cx={circleObject.x}
               cy={circleObject.y}
               r={RADIUS}
-              color="#d1d5db" // Light grey for main ball
+              color="#FFD700" // Gold color for main ball
             >
               {/* Dark grey border */}
               <Circle
@@ -526,7 +526,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
                 cx={extraBall.x}
                 cy={extraBall.y}
                 r={RADIUS}
-                color="#6b7280" // Darker grey for extra balls
+                color="#9CA3AF" // Darker grey for extra balls
               >
                 {/* Light grey border */}
                 <Circle

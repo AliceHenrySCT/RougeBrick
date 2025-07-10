@@ -277,9 +277,11 @@ export const animate = (
   }
 
   for (const o of objects) {
-    const isGameLost = resolveWallCollision(o);
-    if (isGameLost) {
-      brickCount.value = -1;
+    if (o.type === "Circle") {
+      const isGameLost = resolveWallCollision(o);
+      if (isGameLost) {
+        brickCount.value = -1;
+      }
     }
   }
 
