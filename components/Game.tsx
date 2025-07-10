@@ -310,7 +310,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (!frameInfo.timeSincePreviousFrame) return;
     
     // Check win condition
-    if (brickCount.value >= TOTAL_BRICKS && !gameEnded.value) {
+    if (brickCount.value >= 5 && !gameEnded.value) {
       gameEnded.value = true;
       // Save score to recent scores
       finalScoreToSave.value = score.value;
@@ -361,7 +361,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // End-of-game overlay values
   const opacity = useDerivedValue(
     () =>
-      brickCount.value >= TOTAL_BRICKS
+      brickCount.value >= 5
         ? 1
         : 0,
     [brickCount]
