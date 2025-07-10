@@ -329,16 +329,41 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
-    hasUsedExtraBalls.value = false;
     
-    // Reset all extra balls
-    for (const extraBall of allExtraBalls) {
-      extraBall.x.value = -1000;
-      extraBall.y.value = -1000;
-      extraBall.vx = 0;
-      extraBall.vy = 0;
-      extraBall.ax = 0;
-      extraBall.ay = 0;
+    // Force spawn extra balls if we have power-ups
+    if (extraBallPowerUps.value > 0) {
+      console.log('FORCING EXTRA BALL SPAWN AT GAME START');
+      console.log('Main ball position:', circleObject.x.value, circleObject.y.value);
+      console.log('Main ball velocity:', circleObject.vx, circleObject.vy);
+      
+      // Spawn extra balls with EXACT same properties as main ball
+      for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
+        const extraBall = allExtraBalls[i];
+        
+        // EXACT same position
+        extraBall.x.value = circleObject.x.value;
+        extraBall.y.value = circleObject.y.value;
+        
+        // EXACT same velocity
+        extraBall.vx = circleObject.vx;
+        extraBall.vy = circleObject.vy;
+        
+        // EXACT same acceleration
+        extraBall.ax = circleObject.ax;
+        extraBall.ay = circleObject.ay;
+        
+        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+      }
+    } else {
+      // Reset all extra balls if no power-ups
+      for (const extraBall of allExtraBalls) {
+        extraBall.x.value = -1000;
+        extraBall.y.value = -1000;
+        extraBall.vx = 0;
+        extraBall.vy = 0;
+        extraBall.ax = 0;
+        extraBall.ay = 0;
+      }
     }
     
     for (const brick of bricks) {
@@ -353,16 +378,39 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
-    hasUsedExtraBalls.value = false;
     
-    // Reset all extra balls on respawn
-    for (const extraBall of allExtraBalls) {
-      extraBall.x.value = -1000;
-      extraBall.y.value = -1000;
-      extraBall.vx = 0;
-      extraBall.vy = 0;
-      extraBall.ax = 0;
-      extraBall.ay = 0;
+    // Force spawn extra balls if we have power-ups
+    if (extraBallPowerUps.value > 0) {
+      console.log('FORCING EXTRA BALL SPAWN AT RESPAWN');
+      
+      // Spawn extra balls with EXACT same properties as main ball
+      for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
+        const extraBall = allExtraBalls[i];
+        
+        // EXACT same position
+        extraBall.x.value = circleObject.x.value;
+        extraBall.y.value = circleObject.y.value;
+        
+        // EXACT same velocity
+        extraBall.vx = circleObject.vx;
+        extraBall.vy = circleObject.vy;
+        
+        // EXACT same acceleration
+        extraBall.ax = circleObject.ax;
+        extraBall.ay = circleObject.ay;
+        
+        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+      }
+    } else {
+      // Reset all extra balls if no power-ups
+      for (const extraBall of allExtraBalls) {
+        extraBall.x.value = -1000;
+        extraBall.y.value = -1000;
+        extraBall.vx = 0;
+        extraBall.vy = 0;
+        extraBall.ax = 0;
+        extraBall.ay = 0;
+      }
     }
   };
 
