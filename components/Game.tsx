@@ -400,6 +400,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
+      console.log(`Extra ball ${i + 1} positioned at: x=${extraBall.x.value}, y=${extraBall.y.value}`);
+      
       // Create different angles for each ball
       const angle = (Math.PI * 2 * i) / ballsToSpawn + Math.random() * 0.3;
       
@@ -412,7 +414,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
-      console.log(`Extra ball ${i + 1}: speed=${speed}, vx=${extraBall.vx}, vy=${extraBall.vy}`);
+      console.log(`Extra ball ${i + 1}: speed=${speed}, vx=${extraBall.vx}, vy=${extraBall.vy}, angle=${angle}`);
     }
   };
 
@@ -512,7 +514,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     }
     
     // Get all active balls (main ball + any visible extra balls)
-    const activeBalls = [circleObject, ...allExtraBalls.filter(ball => ball.x.value > -500)];
+    const activeBalls = [circleObject, ...allExtraBalls.filter(ball => ball.x.value > -50)];
     
     animate(
       [...activeBalls, rectangleObject, ...bricks],
@@ -582,7 +584,11 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               />
             </Circle>
             {/* Render extra balls */}
-            {allExtraBalls.filter(ball => ball.x.value > -500).map((extraBall, index) => (
+            {allExtraBalls.map((extraBall, index) => {
+              // Only render if ball is on screen
+              if (extraBall.x.value < -50 || extraBall.y.value < -50) return null;
+              
+              return (
               <Circle
                 key={`extra-${index}`}
                 cx={extraBall.x}
@@ -600,7 +606,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
                   strokeWidth={2}
                 />
               </Circle>
-            ))}
+              );
+            })}
             <RoundedRect
               x={rectangleObject.x}
               y={rectangleObject.y}
