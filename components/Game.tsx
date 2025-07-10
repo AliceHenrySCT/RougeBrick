@@ -91,8 +91,10 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     [brick.canCollide]
   );
   
-  const brickX = useDerivedValue(() => brick.x.value + 1, [brick.x]);
-  const brickY = useDerivedValue(() => brick.y.value + 1, [brick.y]);
+  const brickMainX = useDerivedValue(() => brick.x.value + 1, [brick.x]);
+  const brickMainY = useDerivedValue(() => brick.y.value + 1, [brick.y]);
+  const brickMainWidth = useDerivedValue(() => brick.width - 2, []);
+  const brickMainHeight = useDerivedValue(() => brick.height - 2, []);
   
   return (
     <>
@@ -101,18 +103,18 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         key={`${idx}-border`}
         x={brick.x}
         y={brick.y}
-        width={brick.width}
-        height={brick.height}
+        width={BRICK_WIDTH}
+        height={BRICK_HEIGHT}
         color={borderColor}
         r={4}
       />
       {/* Main brick - slightly smaller to show border */}
       <RoundedRect
         key={idx}
-        x={brickX}
-        y={brickY}
-        width={brick.width - 2}
-        height={brick.height - 2}
+        x={brickMainX}
+        y={brickMainY}
+        width={brickMainWidth}
+        height={brickMainHeight}
         color={color}
         r={3}
       >
