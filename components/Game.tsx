@@ -54,7 +54,6 @@ const fontStyle = { fontFamily, fontSize: 32}; // Reduced from 55 to 32
 const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const livesFont = matchFont({ fontFamily, fontSize: 16 });
-const speedFont = matchFont({ fontFamily, fontSize: 14 });
 const resolution = vec(width, height);
 
 // Helper function to calculate row color gradient
@@ -478,12 +477,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     () => `Lives: ${currentLives.value}`,
     [currentLives]
   );
-  const currentSpeedText = useDerivedValue(() => {
-    return `vx: ${circleObject.vx.toFixed(1)}`;
-  }, [circleObject.vx, circleObject.vy]);
-  const vyText = useDerivedValue(() => {
-    return `vy: ${circleObject.vy.toFixed(1)}`;
-  }, [circleObject.vx, circleObject.vy]);
   const uniforms = useDerivedValue(
     () => ({
       iResolution: resolution,
@@ -567,20 +560,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               text={livesText}
               font={livesFont}
               color="#FF6B6B"
-            />
-            <SkiaText
-              x={20}
-              y={height - 80}
-              text={currentSpeedText}
-              font={speedFont}
-              color="#00FF00"
-            />
-            <SkiaText
-              x={20}
-              y={height - 60}
-              text={vyText}
-              font={speedFont}
-              color="#00FFFF"
             />
           </Canvas>
         </View>
