@@ -334,14 +334,21 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Random angle between -45 and 45 degrees from vertical
-      const angle = (Math.random() - 0.5) * Math.PI / 2; // -π/4 to π/4
-      const speed = 8; // Base speed
+      // Get the current velocity magnitude of the main ball
+      const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
       
-      extraBall.vx = Math.sin(angle) * speed;
-      extraBall.vy = -Math.cos(angle) * speed; // Negative for upward movement
-      extraBall.ax = 0.5;
-      extraBall.ay = 1;
+      // Random angle between -45 and 45 degrees from the main ball's direction
+      const mainBallAngle = Math.atan2(circleObject.vx, -circleObject.vy);
+      const angleOffset = (Math.random() - 0.5) * Math.PI / 2; // -π/4 to π/4
+      const newAngle = mainBallAngle + angleOffset;
+      
+      // Apply the same speed as main ball but in the new direction
+      extraBall.vx = Math.sin(newAngle) * mainBallSpeed;
+      extraBall.vy = -Math.cos(newAngle) * mainBallSpeed;
+      
+      // Copy acceleration from main ball
+      extraBall.ax = circleObject.ax;
+      extraBall.ay = circleObject.ay;
     }
   };
   // Save recent score function
