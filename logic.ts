@@ -284,6 +284,11 @@ export const animate = (
     move(o, (0.15 / 16) * timeSincePreviousFrame);
   }
 
+  // Trigger extra ball spawning after first brick hit
+  if (brickCount.value >= 1 && spawnExtraBalls && hasSpawnedExtraBalls && !hasSpawnedExtraBalls.value) {
+    spawnExtraBalls();
+  }
+
   for (const o of objects) {
     if (o.type === "Circle") {
       const isGameLost = resolveWallCollision(o);
