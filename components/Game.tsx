@@ -133,8 +133,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
   const extraBallObjects: CircleInterface[] = [];
-  const spawnTimer = useSharedValue(0);
-  const shouldSpawnExtraBalls = useSharedValue(false);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -315,20 +313,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Function to spawn extra balls
   const spawnExtraBalls = () => {
     'worklet';
-    if (hasSpawnedExtraBalls.value || ballCount.value === 0 || shouldSpawnExtraBalls.value) return;
-    
-    // Start the spawn timer
-    shouldSpawnExtraBalls.value = true;
-    spawnTimer.value = 0;
-  };
-
-  // Function to actually spawn the extra balls after delay
-  const doSpawnExtraBalls = () => {
-    'worklet';
     if (hasSpawnedExtraBalls.value || ballCount.value === 0) return;
     
     hasSpawnedExtraBalls.value = true;
-    shouldSpawnExtraBalls.value = false;
     
     // Cap the number of extra balls to spawn (max 9 to keep total at 10)
     const ballsToSpawn = Math.min(ballCount.value, 9);
@@ -440,14 +427,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
-    
-    // Handle delayed extra ball spawning
-    if (shouldSpawnExtraBalls.value) {
-      spawnTimer.value += frameInfo.timeSincePreviousFrame;
-      if (spawnTimer.value >= 100) { // 100ms delay
-        doSpawnExtraBalls();
-      }
-    }
     
     // Check win condition
     if (brickCount.value >= 5 && !gameEnded.value) {
