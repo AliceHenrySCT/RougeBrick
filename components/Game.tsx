@@ -120,8 +120,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const currentLives = useSharedValue(lives);
-  const ballCount = useSharedValue(extraBalls);
-  const hasSpawnedExtraBalls = useSharedValue(false);
   const clock = useClock();
   const gameEnded = useSharedValue(false);
   const shouldSaveScore = useSharedValue(false);
@@ -133,12 +131,77 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
   
-  // Extra ball system - completely rebuilt
-  const maxExtraBalls = 9;
-  const extraBallObjects: CircleInterface[] = [];
-  const activeBallsCount = useSharedValue(1); // Start with just main ball
-  const shouldSpawnExtraBalls = useSharedValue(false);
-  const ballsToSpawn = useSharedValue(0);
+  // Extra ball system - rebuilt from scratch
+  const extraBallPowerUps = useSharedValue(extraBalls); // Number of extra ball power-ups available
+  const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
+  
+  // Create extra ball objects (max 5 for simplicity)
+  const extraBall1: CircleInterface = {
+    type: 'Circle',
+    id: 1,
+    x: useSharedValue(-1000),
+    y: useSharedValue(-1000),
+    r: RADIUS,
+    m: RADIUS * 10,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
+  
+  const extraBall2: CircleInterface = {
+    type: 'Circle',
+    id: 2,
+    x: useSharedValue(-1000),
+    y: useSharedValue(-1000),
+    r: RADIUS,
+    m: RADIUS * 10,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
+  
+  const extraBall3: CircleInterface = {
+    type: 'Circle',
+    id: 3,
+    x: useSharedValue(-1000),
+    y: useSharedValue(-1000),
+    r: RADIUS,
+    m: RADIUS * 10,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
+  
+  const extraBall4: CircleInterface = {
+    type: 'Circle',
+    id: 4,
+    x: useSharedValue(-1000),
+    y: useSharedValue(-1000),
+    r: RADIUS,
+    m: RADIUS * 10,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
+  
+  const extraBall5: CircleInterface = {
+    type: 'Circle',
+    id: 5,
+    x: useSharedValue(-1000),
+    y: useSharedValue(-1000),
+    r: RADIUS,
+    m: RADIUS * 10,
+    ax: 0,
+    ay: 0,
+    vx: 0,
+    vy: 0,
+  };
+  
+  const allExtraBalls = [extraBall1, extraBall2, extraBall3, extraBall4, extraBall5];
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -166,10 +229,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Update lives when prop changes
   useEffect(() => {
     currentLives.value = lives;
-    ballCount.value = extraBalls; // This is the power-up count
-    hasSpawnedExtraBalls.value = false;
-    activeBallsCount.value = 1; // Reset to just main ball
-  }, [lives]);
+    extraBallPowerUps.value = extraBalls;
+    hasUsedExtraBalls.value = false;
 
   // Watch for haptic trigger changes
   useEffect(() => {
@@ -224,22 +285,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     vy: 0,
   };
 
-  // Create extra ball objects
-  for (let i = 0; i < maxExtraBalls; i++) {
-    extraBallObjects.push({
-      type: 'Circle',
-      id: i + 1,
-      x: useSharedValue(-1000), // Far off-screen
-      y: useSharedValue(-1000),
-      r: RADIUS,
-      m: 0,
-      ax: 0,
-      ay: 0,
-      vx: 0,
-      vy: 0,
-    });
-  }
-  
   // Paddle initial state
   const rectangleObject: PaddleInterface = {
     type: 'Paddle',
@@ -284,13 +329,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
-    hasSpawnedExtraBalls.value = false;
-    activeBallsCount.value = 1;
-    shouldSpawnExtraBalls.value = false;
-    ballsToSpawn.value = 0;
+    hasUsedExtraBalls.value = false;
     
     // Reset all extra balls
-    for (const extraBall of extraBallObjects) {
+    for (const extraBall of allExtraBalls) {
       extraBall.x.value = -1000;
       extraBall.y.value = -1000;
       extraBall.vx = 0;
@@ -311,13 +353,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
-    hasSpawnedExtraBalls.value = false;
-    activeBallsCount.value = 1;
-    shouldSpawnExtraBalls.value = false;
-    ballsToSpawn.value = 0;
+    hasUsedExtraBalls.value = false;
     
     // Reset all extra balls on respawn
-    for (const extraBall of extraBallObjects) {
+    for (const extraBall of allExtraBalls) {
       extraBall.x.value = -1000;
       extraBall.y.value = -1000;
       extraBall.vx = 0;
@@ -330,73 +369,51 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Initialize ball
   createBouncingExample(circleObject);
 
-  // New extra ball spawning system
-  const triggerExtraBallSpawn = () => {
+  // Simple extra ball spawning method
+  const spawnExtraBalls = () => {
     'worklet';
-    if (hasSpawnedExtraBalls.value || ballCount.value === 0) return;
+    console.log('=== SPAWN EXTRA BALLS CALLED ===');
+    console.log('Extra ball power-ups available:', extraBallPowerUps.value);
+    console.log('Has used extra balls this round:', hasUsedExtraBalls.value);
     
-    hasSpawnedExtraBalls.value = true;
-    
-    if (hasSpawnedExtraBalls.value || ballCount.value === 0) {
+    // Check if we have power-ups and haven't used them yet
+    if (extraBallPowerUps.value <= 0 || hasUsedExtraBalls.value) {
+      console.log('Cannot spawn: no power-ups or already used');
       return;
     }
     
-    hasSpawnedExtraBalls.value = true;
-    ballsToSpawn.value = Math.min(ballCount.value, maxExtraBalls);
-    shouldSpawnExtraBalls.value = true;
-  };
-
-  // Actual spawning function that runs when ball has good velocity
-  const executeExtraBallSpawn = () => {
-    'worklet';
-    if (!shouldSpawnExtraBalls.value || ballsToSpawn.value === 0) {
-      return;
-    }
-
-    // Check if main ball has sufficient velocity (not during collision)
-    const mainVelocityMagnitude = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+    // Mark as used
+    hasUsedExtraBalls.value = true;
     
-    // Only spawn if ball is moving fast enough (not in collision state)
-    if (mainVelocityMagnitude < 5) {
-      return; // Wait for better velocity
-    }
-
-    console.log(`=== SPAWNING EXTRA BALLS ===`);
-    console.log(`Main ball velocity magnitude: ${mainVelocityMagnitude.toFixed(2)}`);
-    console.log(`Spawning ${ballsToSpawn.value} extra balls`);
-
-    // Spawn the extra balls
-    for (let i = 0; i < ballsToSpawn.value; i++) {
-      const extraBall = extraBallObjects[i];
+    // Get current main ball state
+    const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+    console.log('Main ball speed:', mainBallSpeed);
+    
+    // Spawn the number of extra balls we have power-ups for (max 5)
+    const ballsToSpawn = Math.min(extraBallPowerUps.value, 5);
+    console.log('Spawning', ballsToSpawn, 'extra balls');
+    
+    for (let i = 0; i < ballsToSpawn; i++) {
+      const extraBall = allExtraBalls[i];
       
       // Position at main ball location
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Generate random angle for direction
-      const angle = (Math.PI * 2 * i) / ballsToSpawn.value + Math.random() * 0.5; // Spread evenly with some randomness
+      // Create different angles for each ball
+      const angle = (Math.PI * 2 * i) / ballsToSpawn + Math.random() * 0.3;
       
-      // Set velocity to match main ball's magnitude but in random direction
-      extraBall.vx = mainVelocityMagnitude * Math.cos(angle);
-      extraBall.vy = mainVelocityMagnitude * Math.sin(angle);
+      // Set velocity - use main ball's speed or minimum speed
+      const speed = Math.max(mainBallSpeed, 8); // Ensure minimum speed
+      extraBall.vx = speed * Math.cos(angle);
+      extraBall.vy = speed * Math.sin(angle);
       
-      // Copy acceleration exactly
+      // Copy acceleration
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
-      // Set mass
-      extraBall.m = RADIUS * 10;
-      
-      activeBallsCount.value++;
-      
-      console.log(`Extra ball ${i + 1}: vx=${extraBall.vx.toFixed(2)}, vy=${extraBall.vy.toFixed(2)}, magnitude=${Math.sqrt(extraBall.vx * extraBall.vx + extraBall.vy * extraBall.vy).toFixed(2)}`);
+      console.log(`Extra ball ${i + 1}: speed=${speed}, vx=${extraBall.vx}, vy=${extraBall.vy}`);
     }
-    
-    // Reset spawn flags
-    shouldSpawnExtraBalls.value = false;
-    ballsToSpawn.value = 0;
-    
-    console.log(`Total active balls: ${activeBallsCount.value}`);
   };
 
   // Save recent score function
@@ -494,13 +511,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       return;
     }
     
-    // Get all active balls (main ball + visible extra balls)
-    const activeBalls = [circleObject, ...extraBallObjects.filter(ball => ball.x.value > -500)];
-    
-    // Check if we should spawn extra balls
-    if (shouldSpawnExtraBalls.value) {
-      executeExtraBallSpawn();
-    }
+    // Get all active balls (main ball + any visible extra balls)
+    const activeBalls = [circleObject, ...allExtraBalls.filter(ball => ball.x.value > -500)];
     
     animate(
       [...activeBalls, rectangleObject, ...bricks],
@@ -508,8 +520,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       brickCount,
       score,
       hapticEnabled,
-      triggerExtraBallSpawn,
-      hasSpawnedExtraBalls
+      spawnExtraBalls,
+      hasUsedExtraBalls
     );
   });
 
@@ -570,7 +582,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               />
             </Circle>
             {/* Render extra balls */}
-            {extraBallObjects.filter(ball => ball.x.value > -500).map((extraBall, index) => (
+            {allExtraBalls.filter(ball => ball.x.value > -500).map((extraBall, index) => (
               <Circle
                 key={`extra-${index}`}
                 cx={extraBall.x}
