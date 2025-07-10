@@ -528,12 +528,12 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
                 r={RADIUS}
                 color="#6b7280" // Darker grey for extra balls
               >
-                {/* Dark grey border */}
+                {/* Light grey border */}
                 <Circle
                   cx={0}
                   cy={0}
                   r={RADIUS}
-                  color="#374151"
+                  color="#d1d5db"
                   style="stroke"
                   strokeWidth={2}
                 />
