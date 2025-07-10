@@ -381,6 +381,23 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     console.log(`Total extra balls spawned: ${ballsToSpawn}`);
     console.log(`Main ball velocity magnitude: ${velocityMagnitude.toFixed(2)}`);
     console.log(`Main ball acceleration magnitude: ${accelerationMagnitude.toFixed(2)}`);
+    
+    // Log ball values again after 500ms to see how they've changed
+    setTimeout(() => {
+      const newVelocityMagnitude = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+      const newAccelerationMagnitude = Math.sqrt(circleObject.ax * circleObject.ax + circleObject.ay * circleObject.ay);
+      
+      console.log(`=== BALL VALUES AFTER 500ms ===`);
+      console.log(`Position: (${circleObject.x.value.toFixed(2)}, ${circleObject.y.value.toFixed(2)})`);
+      console.log(`Velocity: vx=${circleObject.vx.toFixed(2)}, vy=${circleObject.vy.toFixed(2)}`);
+      console.log(`Acceleration: ax=${circleObject.ax.toFixed(2)}, ay=${circleObject.ay.toFixed(2)}`);
+      console.log(`Velocity magnitude: ${newVelocityMagnitude.toFixed(2)}`);
+      console.log(`Acceleration magnitude: ${newAccelerationMagnitude.toFixed(2)}`);
+      console.log(`Velocity direction: ${Math.atan2(circleObject.vy, circleObject.vx).toFixed(2)} radians (${(Math.atan2(circleObject.vy, circleObject.vx) * 180 / Math.PI).toFixed(1)}°)`);
+      console.log(`Acceleration direction: ${Math.atan2(circleObject.ay, circleObject.ax).toFixed(2)} radians (${(Math.atan2(circleObject.ay, circleObject.ax) * 180 / Math.PI).toFixed(1)}°)`);
+      console.log(`Change in velocity magnitude: ${(newVelocityMagnitude - velocityMagnitude).toFixed(2)}`);
+      console.log(`Change in acceleration magnitude: ${(newAccelerationMagnitude - accelerationMagnitude).toFixed(2)}`);
+    }, 500);
   };
 
   // Save recent score function
