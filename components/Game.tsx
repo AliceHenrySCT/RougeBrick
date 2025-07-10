@@ -231,6 +231,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     currentLives.value = lives;
     extraBallPowerUps.value = extraBalls;
     hasUsedExtraBalls.value = false;
+  }, [lives, extraBalls]);
 
   // Watch for haptic trigger changes
   useEffect(() => {
