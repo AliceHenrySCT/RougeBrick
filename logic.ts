@@ -133,9 +133,17 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
     // Collision with the bottom wall
     else if (circleObject.y.value + circleObject.r > height) {
-      // Don't reset ball position here - let the game component handle lives
-      // Just signal that ball hit bottom
-      return true;
+      // For extra balls (id > 0), just hide them
+      if (circleObject.id > 0) {
+        circleObject.x.value = -100;
+        circleObject.y.value = -100;
+        circleObject.vx = 0;
+        circleObject.vy = 0;
+        return false;
+      } else {
+        // For main ball (id = 0), signal game loss
+        return true;
+      }
     }
 
     // Collision with the left wall
@@ -258,7 +266,9 @@ export const animate = (
   timeSincePreviousFrame: number,
   brickCount: SharedValue<number>,
   score: SharedValue<number>,
-  hapticEnabled: SharedValue<boolean>
+  hapticEnabled: SharedValue<boolean>,
+  spawnExtraBalls?: () => void,
+  hasSpawnedExtraBalls?: SharedValue<boolean>
 ) => {
   "worklet";
 
@@ -291,6 +301,14 @@ export const animate = (
       brickCount.value++;
       score.value += 100; // Base score per brick
     }
+    
+    // Check if main ball hit paddle for first time to spawn extra balls
+    if (col.o1.type === "Circle" && col.o2.type === "Paddle" && 
+        col.o1.id === 0 && spawnExtraBalls && hasSpawnedExtraBalls && 
+        !hasSpawnedExtraBalls.value) {
+      spawnExtraBalls();
+    }
+    
     resolveCollisionWithBounce(col, hapticEnabled);
   }
 };

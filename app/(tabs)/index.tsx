@@ -6,9 +6,9 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTabVisibility } from './_layout';
-import { Zap, Shield, Target } from 'lucide-react-native';
+import { Zap, Shield, Circle } from 'lucide-react-native';
 
-type PowerUp = 'speed' | 'shield' | 'precision' | null;
+type PowerUp = 'speed' | 'shield' | 'extraBall' | null;
 
 export default function PlayTab() {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameOver'>('menu');
@@ -17,6 +17,7 @@ export default function PlayTab() {
   const [round, setRound] = useState(1);
   const [lives, setLives] = useState(3);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
+  const [extraBalls, setExtraBalls] = useState(0);
   const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function PlayTab() {
     setCurrentScore(0);
     setRound(1);
     setLives(3);
+    setExtraBalls(0);
     setGameState('playing');
   };
 
@@ -82,6 +84,8 @@ export default function PlayTab() {
     // Apply power-up effects
     if (selectedPowerUp === 'shield') {
       setLives(prev => prev + 1); // Extra life power-up
+    } else if (selectedPowerUp === 'extraBall') {
+      setExtraBalls(prev => prev + 1); // Extra ball power-up
     }
     
     setGameState('playing');
@@ -91,6 +95,7 @@ export default function PlayTab() {
     setGameState('menu');
     setRound(1);
     setLives(3);
+    setExtraBalls(0);
   };
 
   const handleLivesChange = (newLives: number) => {
@@ -106,6 +111,7 @@ export default function PlayTab() {
         onTabVisibilityChange={setTabsVisible}
         lives={lives}
         onLivesChange={handleLivesChange}
+        extraBalls={extraBalls}
       />
     );
   }
@@ -127,10 +133,10 @@ export default function PlayTab() {
         color: '#00FF00',
       },
       {
-        id: 'precision' as const,
-        name: 'Precision',
-        description: 'Better ball control',
-        icon: Target,
+        id: 'extraBall' as const,
+        name: 'Extra Ball',
+        description: 'Spawn additional ball',
+        icon: Circle,
         color: '#FF6B6B',
       },
     ];

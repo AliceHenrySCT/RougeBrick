@@ -59,6 +59,7 @@ interface GameProps {
   onTabVisibilityChange: (visible: boolean) => void;
   lives: number;
   onLivesChange: (lives: number) => void;
+  extraBalls: number;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -127,10 +128,12 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const currentLives = useSharedValue(lives);
+  const ballCount = useSharedValue(extraBalls);
+  const hasSpawnedExtraBalls = useSharedValue(false);
   const clock = useClock();
   const gameEnded = useSharedValue(false);
   const shouldSaveScore = useSharedValue(false);
@@ -141,6 +144,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const hapticEnabled = useSharedValue(true);
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
+  const extraBallObjects: CircleInterface[] = [];
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -168,6 +172,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Update lives when prop changes
   useEffect(() => {
     currentLives.value = lives;
+    ballCount.value = extraBalls;
+    hasSpawnedExtraBalls.value = false; // Reset for new round
   }, [lives]);
 
   // Watch for haptic trigger changes
@@ -223,6 +229,21 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     vy: 0,
   };
 
+  // Create extra ball objects
+  for (let i = 0; i < 5; i++) { // Max 5 extra balls
+    extraBallObjects.push({
+      type: 'Circle',
+      id: i + 1,
+      x: useSharedValue(-100), // Start off-screen
+      y: useSharedValue(-100),
+      r: RADIUS,
+      m: 0,
+      ax: 0,
+      ay: 0,
+      vx: 0,
+      vy: 0,
+    });
+  }
   // Paddle initial state
   const rectangleObject: PaddleInterface = {
     type: 'Paddle',
@@ -267,6 +288,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
+    hasSpawnedExtraBalls.value = false;
+    // Hide extra balls
+    for (const extraBall of extraBallObjects) {
+      extraBall.x.value = -100;
+      extraBall.y.value = -100;
+      extraBall.vx = 0;
+      extraBall.vy = 0;
+    }
     for (const brick of bricks) {
       brick.canCollide.value = true;
     }
@@ -279,11 +308,42 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
+    hasSpawnedExtraBalls.value = false;
+    // Hide extra balls on respawn
+    for (const extraBall of extraBallObjects) {
+      extraBall.x.value = -100;
+      extraBall.y.value = -100;
+      extraBall.vx = 0;
+      extraBall.vy = 0;
+    }
   };
 
   // Initialize ball
   createBouncingExample(circleObject);
 
+  // Function to spawn extra balls
+  const spawnExtraBalls = () => {
+    'worklet';
+    if (hasSpawnedExtraBalls.value || ballCount.value === 0) return;
+    
+    hasSpawnedExtraBalls.value = true;
+    
+    for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
+      const extraBall = extraBallObjects[i];
+      // Spawn at same position as main ball
+      extraBall.x.value = circleObject.x.value;
+      extraBall.y.value = circleObject.y.value;
+      
+      // Random angle between -45 and 45 degrees from vertical
+      const angle = (Math.random() - 0.5) * Math.PI / 2; // -π/4 to π/4
+      const speed = 8; // Base speed
+      
+      extraBall.vx = Math.sin(angle) * speed;
+      extraBall.vy = -Math.cos(angle) * speed; // Negative for upward movement
+      extraBall.ax = 0.5;
+      extraBall.ay = 1;
+    }
+  };
   // Save recent score function
   const saveRecentScore = async (finalScore: number, finalRound: number) => {
     try {
@@ -379,12 +439,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       return;
     }
     
+    // Get all active balls (main ball + visible extra balls)
+    const activeBalls = [circleObject, ...extraBallObjects.filter(ball => ball.x.value > -50)];
+    
     animate(
-      [circleObject, rectangleObject, ...bricks],
+      [...activeBalls, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
       brickCount,
       score,
-      hapticEnabled
+      hapticEnabled,
+      spawnExtraBalls,
+      hasSpawnedExtraBalls
     );
   });
 
@@ -432,7 +497,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               cx={circleObject.x}
               cy={circleObject.y}
               r={RADIUS}
-              color={BALL_COLOR}
+              color="#d1d5db" // Light grey for main ball
             >
               {/* Dark grey border */}
               <Circle
@@ -444,6 +509,26 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
                 strokeWidth={2}
               />
             </Circle>
+            {/* Render extra balls */}
+            {extraBallObjects.map((extraBall, index) => (
+              <Circle
+                key={`extra-${index}`}
+                cx={extraBall.x}
+                cy={extraBall.y}
+                r={RADIUS}
+                color="#6b7280" // Darker grey for extra balls
+              >
+                {/* Dark grey border */}
+                <Circle
+                  cx={0}
+                  cy={0}
+                  r={RADIUS}
+                  color="#374151"
+                  style="stroke"
+                  strokeWidth={2}
+                />
+              </Circle>
+            ))}
             <RoundedRect
               x={rectangleObject.x}
               y={rectangleObject.y}
