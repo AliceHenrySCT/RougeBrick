@@ -333,9 +333,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.vx = Math.cos(randomAngle) * totalSpeed * speedVariation;
       extraBall.vy = Math.sin(randomAngle) * totalSpeed * speedVariation;
       
-      // Copy acceleration from main ball
-      extraBall.ax = circleObject.ax;
-      extraBall.ay = circleObject.ay;
+      // Generate random acceleration split that totals 4
+      const totalAcceleration = 4;
+      const randomSplit = Math.random(); // 0 to 1
+      
+      // Split the total acceleration randomly between ax and ay
+      // Use random signs for direction
+      const axMagnitude = randomSplit * totalAcceleration;
+      const ayMagnitude = (1 - randomSplit) * totalAcceleration;
+      
+      extraBall.ax = (Math.random() > 0.5 ? 1 : -1) * axMagnitude;
+      extraBall.ay = (Math.random() > 0.5 ? 1 : -1) * ayMagnitude;
       
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
