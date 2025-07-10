@@ -355,11 +355,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.vx = velocityMagnitude * Math.cos(randomAngle);
       extraBall.vy = velocityMagnitude * Math.sin(randomAngle);
       
-      // Set acceleration using main ball's magnitude but random direction
-      // Use a slightly different angle for acceleration to add more variation
-      const accelAngle = randomAngle + (Math.random() * 0.5 - 0.25); // ±15 degree variation
-      extraBall.ax = accelerationMagnitude * Math.cos(accelAngle);
-      extraBall.ay = accelerationMagnitude * Math.sin(accelAngle);
+      // Set acceleration to exactly match the main ball (no randomization)
+      extraBall.ax = mainBallAx;
+      extraBall.ay = mainBallAy;
       
       // Ensure minimum velocity to prevent stuck balls
       if (Math.abs(extraBall.vx) < 2) extraBall.vx = extraBall.vx >= 0 ? 2 : -2;
@@ -373,7 +371,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       console.log(`  Position: (${extraBall.x.value.toFixed(2)}, ${extraBall.y.value.toFixed(2)})`);
       console.log(`  Velocity: vx=${extraBall.vx.toFixed(2)}, vy=${extraBall.vy.toFixed(2)}`);
       console.log(`  Acceleration: ax=${extraBall.ax.toFixed(2)}, ay=${extraBall.ay.toFixed(2)}`);
-      console.log(`  Direction: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
+      console.log(`  Velocity Direction: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
+      console.log(`  Acceleration: mirrors original ball exactly`);
     }
     
     // Debug: Log summary
