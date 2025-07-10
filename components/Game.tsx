@@ -133,6 +133,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
   const extraBallObjects: CircleInterface[] = [];
+  const spawnTimer = useSharedValue(0);
+  const shouldSpawnExtraBalls = useSharedValue(false);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -313,25 +315,33 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Function to spawn extra balls
   const spawnExtraBalls = () => {
     'worklet';
+    if (hasSpawnedExtraBalls.value || ballCount.value === 0 || shouldSpawnExtraBalls.value) return;
+    
+    // Start the spawn timer
+    shouldSpawnExtraBalls.value = true;
+    spawnTimer.value = 0;
+  };
+
+  // Function to actually spawn the extra balls after delay
+  const doSpawnExtraBalls = () => {
+    'worklet';
     if (hasSpawnedExtraBalls.value || ballCount.value === 0) return;
     
     hasSpawnedExtraBalls.value = true;
+    shouldSpawnExtraBalls.value = false;
     
     // Cap the number of extra balls to spawn (max 9 to keep total at 10)
     const ballsToSpawn = Math.min(ballCount.value, 9);
     
-    // Use much higher base values for extra balls
-    const baseVx = 8; // Higher initial velocity
-    const baseVy = 8;
-    const baseAx = 4; // Higher initial acceleration
-    const baseAy = 4;
+    // Get the main ball's current velocity and acceleration
+    const mainBallVx = circleObject.vx;
+    const mainBallVy = circleObject.vy;
+    const mainBallAx = circleObject.ax;
+    const mainBallAy = circleObject.ay;
     
-    // Boost by 150% for much faster movement
-    const boostFactor = 2.5;
-    const boostedAx = baseAx * boostFactor;
-    const boostedAy = baseAy * boostFactor;
-    const boostedVx = baseVx * boostFactor;
-    const boostedVy = baseVy * boostFactor;
+    // Calculate the magnitude of velocity and acceleration
+    const velocityMagnitude = Math.sqrt(mainBallVx * mainBallVx + mainBallVy * mainBallVy);
+    const accelerationMagnitude = Math.sqrt(mainBallAx * mainBallAx + mainBallAy * mainBallAy);
     
     // Spawn all extra balls at once with proper initialization
     for (let i = 0; i < ballsToSpawn; i++) {
@@ -341,22 +351,22 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Create more varied angles for better spread
-      const angleRange = Math.PI * 0.8; // 144 degrees spread
-      const angleStep = angleRange / (ballsToSpawn + 1);
-      const baseAngle = -Math.PI/2 - angleRange/2; // Start from left side
-      const randomAngle = baseAngle + (angleStep * (i + 1)) + (Math.random() * 0.4 - 0.2);
+      // Generate a random direction (angle in radians)
+      const randomAngle = Math.random() * Math.PI * 2; // Full 360 degrees
       
-      // Set velocity with the calculated angle
-      extraBall.vx = boostedVx * Math.sin(randomAngle);
-      extraBall.vy = boostedVy * Math.cos(randomAngle); // Can go up or down initially
+      // Set velocity using main ball's magnitude but random direction
+      extraBall.vx = velocityMagnitude * Math.cos(randomAngle);
+      extraBall.vy = velocityMagnitude * Math.sin(randomAngle);
       
-      // Apply acceleration with more variation
-      const axVariation = (Math.random() - 0.5) * 2; // ±100% variation
-      const ayVariation = (Math.random() - 0.5) * 1; // ±50% variation
+      // Set acceleration using main ball's magnitude but random direction
+      // Use a slightly different angle for acceleration to add more variation
+      const accelAngle = randomAngle + (Math.random() * 0.5 - 0.25); // ±15 degree variation
+      extraBall.ax = accelerationMagnitude * Math.cos(accelAngle);
+      extraBall.ay = accelerationMagnitude * Math.sin(accelAngle);
       
-      extraBall.ax = boostedAx + (boostedAx * axVariation);
-      extraBall.ay = boostedAy + (boostedAy * ayVariation);
+      // Ensure minimum velocity to prevent stuck balls
+      if (Math.abs(extraBall.vx) < 2) extraBall.vx = extraBall.vx >= 0 ? 2 : -2;
+      if (Math.abs(extraBall.vy) < 2) extraBall.vy = extraBall.vy >= 0 ? 2 : -2;
       
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
@@ -366,15 +376,16 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       console.log(`  Position: (${extraBall.x.value.toFixed(2)}, ${extraBall.y.value.toFixed(2)})`);
       console.log(`  Velocity: vx=${extraBall.vx.toFixed(2)}, vy=${extraBall.vy.toFixed(2)}`);
       console.log(`  Acceleration: ax=${extraBall.ax.toFixed(2)}, ay=${extraBall.ay.toFixed(2)}`);
-      console.log(`  Angle: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
+      console.log(`  Direction: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
     }
     
     // Debug: Log summary
     console.log(`=== SPAWN SUMMARY ===`);
     console.log(`Total extra balls spawned: ${ballsToSpawn}`);
-    console.log(`Base values: vx=${boostedVx}, vy=${boostedVy}, ax=${boostedAx}, ay=${boostedAy}`);
-    console.log(`Boost factor: ${boostFactor}x`);
+    console.log(`Main ball velocity magnitude: ${velocityMagnitude.toFixed(2)}`);
+    console.log(`Main ball acceleration magnitude: ${accelerationMagnitude.toFixed(2)}`);
   };
+
   // Save recent score function
   const saveRecentScore = async (finalScore: number, finalRound: number) => {
     try {
@@ -429,6 +440,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
+    
+    // Handle delayed extra ball spawning
+    if (shouldSpawnExtraBalls.value) {
+      spawnTimer.value += frameInfo.timeSincePreviousFrame;
+      if (spawnTimer.value >= 100) { // 100ms delay
+        doSpawnExtraBalls();
+      }
+    }
     
     // Check win condition
     if (brickCount.value >= 5 && !gameEnded.value) {
