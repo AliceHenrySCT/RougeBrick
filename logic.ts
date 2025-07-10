@@ -14,7 +14,7 @@ const { width, height } = Dimensions.get("window");
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
-  if (object.type === "Circle") {
+  if (object.type === "Circle" && object.x.value > -50) { // Only move visible balls
     object.vx += object.ax * dt;
     object.vy += object.ay * dt;
     if (object.vx > MAX_SPEED) {

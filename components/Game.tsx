@@ -352,6 +352,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Copy acceleration from main ball
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
+      
+      // Set mass to ensure proper physics
+      extraBall.m = RADIUS * 10;
     }
   };
   // Save recent score function
