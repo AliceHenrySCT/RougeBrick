@@ -308,6 +308,16 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Initialize ball
   createBouncingExample(circleObject);
 
+  // Spawn extra balls at the start of the round
+  useEffect(() => {
+    if (extraBalls > 0) {
+      // Small delay to ensure main ball is initialized
+      setTimeout(() => {
+        spawnExtraBalls();
+      }, 500);
+    }
+  }, [extraBalls]);
+
   // Function to spawn extra balls
   const spawnExtraBalls = () => {
     'worklet';
@@ -328,14 +338,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       
       // Generate random velocity components that sum to original total
       const randomAngle = Math.random() * Math.PI * 8;
-      const speedVariation = (1.5 + Math.random() * 1.0); // 150% to 250% of original speed
+      const speedVariation = (2.0 + Math.random() * 1.5); // 200% to 350% of original speed
       
-      const newSpeed = (totalSpeed * speedVariation); // Minimum speed of 60
+      const newSpeed = Math.max(80, totalSpeed * speedVariation); // Minimum speed of 80
       extraBall.vx = Math.cos(randomAngle) * newSpeed;
       extraBall.vy = Math.sin(randomAngle) * newSpeed;
       
       // Generate random acceleration split that totals 4
-      const totalAcceleration = 20; // Increased acceleration
+      const totalAcceleration = 25; // Even higher acceleration
       const randomSplit = Math.random(); // 0 to 1
       
       // Split the total acceleration randomly between ax and ay

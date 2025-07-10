@@ -312,13 +312,6 @@ export const animate = (
       score.value += 100; // Base score per brick
     }
     
-    // Check if main ball hit paddle for first time to spawn extra balls
-    if (col.o1.type === "Circle" && col.o2.type === "Paddle" && 
-        col.o1.id === 0 && spawnExtraBalls && hasSpawnedExtraBalls && 
-        !hasSpawnedExtraBalls.value) {
-      spawnExtraBalls();
-    }
-    
     resolveCollisionWithBounce(col, hapticEnabled);
   }
 };
