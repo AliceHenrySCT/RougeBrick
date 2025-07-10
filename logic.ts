@@ -133,12 +133,8 @@ export const resolveWallCollision = (object: ShapeInterface) => {
 
     // Collision with the bottom wall
     else if (circleObject.y.value + circleObject.r > height) {
-      circleObject.x.value = 100;
-      circleObject.y.value = 450;
-      circleObject.ax = 0.5;
-      circleObject.ay = 1;
-      circleObject.vx = 0;
-      circleObject.vy = 0;
+      // Don't reset ball position here - let the game component handle lives
+      // Just signal that ball hit bottom
       return true;
     }
 

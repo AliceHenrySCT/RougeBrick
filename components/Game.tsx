@@ -57,12 +57,15 @@ interface GameProps {
   round: number;
   currentScore: number;
   onTabVisibilityChange: (visible: boolean) => void;
+  lives: number;
+  onLivesChange: (lives: number) => void;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
 const fontStyle = { fontFamily, fontSize: 32}; // Reduced from 55 to 32
 const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
+const livesFont = matchFont({ fontFamily, fontSize: 16 });
 const resolution = vec(width, height);
 
 // Helper function to calculate row color gradient
@@ -124,9 +127,10 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
+  const currentLives = useSharedValue(lives);
   const clock = useClock();
   const gameEnded = useSharedValue(false);
   const shouldSaveScore = useSharedValue(false);
@@ -135,6 +139,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldTriggerGameEnd = useSharedValue(false);
   const gameWon = useSharedValue(false);
   const hapticEnabled = useSharedValue(true);
+  const shouldUpdateLives = useSharedValue(false);
+  const newLivesCount = useSharedValue(0);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -158,6 +164,11 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     };
     loadHapticSetting();
   }, []);
+
+  // Update lives when prop changes
+  useEffect(() => {
+    currentLives.value = lives;
+  }, [lives]);
 
   // Watch for haptic trigger changes
   useEffect(() => {
@@ -184,6 +195,19 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     return () => clearInterval(interval);
   }, []);
+
+  // Watch for lives update trigger
+  useEffect(() => {
+    const checkLivesUpdate = () => {
+      if (shouldUpdateLives.value) {
+        onLivesChange(newLivesCount.value);
+        shouldUpdateLives.value = false;
+      }
+    };
+    
+    const interval = setInterval(checkLivesUpdate, 100);
+    return () => clearInterval(interval);
+  }, [onLivesChange]);
 
   // Circle (ball) initial state
   const circleObject: CircleInterface = {
@@ -248,6 +272,13 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     }
     brickCount.value = 0;
     gameEnded.value = false;
+  };
+
+  // Respawn ball without resetting bricks
+  const respawnBall = () => {
+    'worklet';
+    rectangleObject.x.value = PADDLE_MIDDLE;
+    createBouncingExample(circleObject);
   };
 
   // Initialize ball
@@ -324,13 +355,24 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (
       brickCount.value === -1 && !gameEnded.value
     ) {
-      gameEnded.value = true;
-      finalScoreToSave.value = score.value;
-      finalRoundToSave.value = round;
-      gameWon.value = false;
-      shouldSaveScore.value = true;
-      shouldTriggerGameEnd.value = true;
-      return;
+      // Check if player has more than 1 life
+      if (currentLives.value > 1) {
+        // Subtract a life and respawn
+        currentLives.value = currentLives.value - 1;
+        newLivesCount.value = currentLives.value;
+        shouldUpdateLives.value = true;
+        brickCount.value = 0; // Reset brick count to continue game
+        respawnBall();
+      } else {
+        // Game over - no lives left
+        gameEnded.value = true;
+        finalScoreToSave.value = score.value;
+        finalRoundToSave.value = round;
+        gameWon.value = false;
+        shouldSaveScore.value = true;
+        shouldTriggerGameEnd.value = true;
+        return;
+      }
     }
     
     if (gameEnded.value) {
@@ -365,6 +407,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const roundText = useDerivedValue(
     () => `Round ${round}`,
     [round]
+  );
+  const livesText = useDerivedValue(
+    () => `Lives: ${currentLives.value}`,
+    [currentLives]
   );
   const uniforms = useDerivedValue(
     () => ({
@@ -422,6 +468,13 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
               text={roundText}
               font={scoreFont}
               color="white"
+            />
+            <SkiaText
+              x={width - 80}
+              y={60}
+              text={livesText}
+              font={livesFont}
+              color="#FF6B6B"
             />
           </Canvas>
         </View>

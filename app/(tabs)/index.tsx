@@ -15,6 +15,7 @@ export default function PlayTab() {
   const [currentScore, setCurrentScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [round, setRound] = useState(1);
+  const [lives, setLives] = useState(3);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
   const { setTabsVisible } = useTabVisibility();
 
@@ -70,18 +71,30 @@ export default function PlayTab() {
   const startNewGame = () => {
     setCurrentScore(0);
     setRound(1);
+    setLives(3);
     setGameState('playing');
   };
 
   const startNextRound = () => {
     setSelectedPowerUp(null); // Reset power-up selection
     setRound(prev => prev + 1);
+    
+    // Apply power-up effects
+    if (selectedPowerUp === 'shield') {
+      setLives(prev => prev + 1); // Extra life power-up
+    }
+    
     setGameState('playing');
   };
 
   const backToMenu = () => {
     setGameState('menu');
     setRound(1);
+    setLives(3);
+  };
+
+  const handleLivesChange = (newLives: number) => {
+    setLives(newLives);
   };
 
   if (gameState === 'playing') {
@@ -91,6 +104,8 @@ export default function PlayTab() {
         round={round}
         currentScore={currentScore}
         onTabVisibilityChange={setTabsVisible}
+        lives={lives}
+        onLivesChange={handleLivesChange}
       />
     );
   }
