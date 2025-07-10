@@ -316,10 +316,16 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     hasSpawnedExtraBalls.value = true;
     
-    // Get the original ball's velocity components
-    const originalVx = circleObject.vx;
-    const originalVy = circleObject.vy;
-    const totalSpeed = Math.sqrt(originalVx * originalVx + originalVy * originalVy);
+    // Use the original ball's initial velocity and acceleration values
+    const baseVx = 0; // Original ball starts with 0 velocity
+    const baseVy = 0;
+    const baseAx = 0.5; // Original ball's initial acceleration
+    const baseAy = 1;
+    
+    // Boost by 50%
+    const boostFactor = 1.5;
+    const boostedAx = baseAx * boostFactor;
+    const boostedAy = baseAy * boostFactor;
     
     for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
       const extraBall = extraBallObjects[i];
@@ -327,25 +333,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Generate random velocity components that sum to original total
-      const randomAngle = Math.random() * Math.PI * 8;
-      const speedVariation = (1.5 + Math.random() * 1.0); // 150% to 250% of original speed
+      // Start with the same initial velocity as original ball (0, 0)
+      extraBall.vx = baseVx;
+      extraBall.vy = baseVy;
       
-      const newSpeed = Math.max(60, totalSpeed * speedVariation); // Minimum speed of 60
-      extraBall.vx = Math.cos(randomAngle) * newSpeed;
-      extraBall.vy = Math.sin(randomAngle) * newSpeed;
+      // Apply boosted acceleration with random direction variations
+      const randomAngle = Math.random() * Math.PI * 2; // Full circle
+      const axVariation = Math.cos(randomAngle) * 0.3; // ±30% variation
+      const ayVariation = Math.sin(randomAngle) * 0.3;
       
-      // Generate random acceleration split that totals 4
-      const totalAcceleration = 20;
-      const randomSplit = Math.random(); // 0 to 1
-      
-      // Split the total acceleration randomly between ax and ay
-      // Use random signs for direction
-      const axMagnitude = randomSplit * totalAcceleration;
-      const ayMagnitude = (1 - randomSplit) * totalAcceleration;
-      
-      extraBall.ax = (Math.random() > 0.5 ? 1 : -1) * axMagnitude;
-      extraBall.ay = (Math.random() > 0.5 ? 1 : -1) * ayMagnitude;
+      extraBall.ax = boostedAx + (boostedAx * axVariation);
+      extraBall.ay = boostedAy + (boostedAy * ayVariation);
       
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
