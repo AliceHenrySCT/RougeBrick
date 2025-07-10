@@ -361,12 +361,19 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
       
-      // Debug: Log that we're spawning this ball
-      console.log(`Spawning extra ball ${i + 1}/${ballsToSpawn} at position (${extraBall.x.value}, ${extraBall.y.value})`);
+      // Debug: Log that we're spawning this ball with full details
+      console.log(`Spawning extra ball ${i + 1}/${ballsToSpawn}:`);
+      console.log(`  Position: (${extraBall.x.value.toFixed(2)}, ${extraBall.y.value.toFixed(2)})`);
+      console.log(`  Velocity: vx=${extraBall.vx.toFixed(2)}, vy=${extraBall.vy.toFixed(2)}`);
+      console.log(`  Acceleration: ax=${extraBall.ax.toFixed(2)}, ay=${extraBall.ay.toFixed(2)}`);
+      console.log(`  Angle: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
     }
     
-    // Debug: Log total balls spawned
+    // Debug: Log summary
+    console.log(`=== SPAWN SUMMARY ===`);
     console.log(`Total extra balls spawned: ${ballsToSpawn}`);
+    console.log(`Base values: vx=${boostedVx}, vy=${boostedVy}, ax=${boostedAx}, ay=${boostedAy}`);
+    console.log(`Boost factor: ${boostFactor}x`);
   };
   // Save recent score function
   const saveRecentScore = async (finalScore: number, finalRound: number) => {
