@@ -238,6 +238,14 @@ function circleRect(
 export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
   "worklet";
 
+  // Prevent ball-to-ball collisions
+  if (o1.type === "Circle" && o2.type === "Circle") {
+    return {
+      collisionInfo: null,
+      collided: false,
+    };
+  }
+
   if (
     (o1.type === "Circle" && o2.type === "Paddle") ||
     (o1.type === "Circle" && o2.type === "Brick")
