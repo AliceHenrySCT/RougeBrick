@@ -328,7 +328,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       
       // Generate random velocity components that sum to original total
       const randomAngle = Math.random() * Math.PI * 2;
-      const speedVariation = 0.8 + Math.random() * 0.4; // 80% to 120% of original speed
+      const speedVariation = (0.8 + Math.random() * 0.4) * 2; // Double the speed (160% to 240% of original)
       
       extraBall.vx = Math.cos(randomAngle) * totalSpeed * speedVariation;
       extraBall.vy = Math.sin(randomAngle) * totalSpeed * speedVariation;
