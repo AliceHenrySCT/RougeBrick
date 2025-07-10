@@ -315,9 +315,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     hasSpawnedExtraBalls.value = true;
     
-    // Get the original ball's velocity components
-    const originalVx = circleObject.vx;
-    const originalVy = circleObject.vy;
+    // Get the original ball's acceleration components
+    const originalAx = circleObject.ax;
+    const originalAy = circleObject.ay;
     
     for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
       const extraBall = extraBallObjects[i];
@@ -325,24 +325,28 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Generate random velocity components that sum to the original velocity
-      // Random factor between 0.3 and 1.7 for variation
-      const randomFactorX = 0.3 + Math.random() * 1.4;
-      const randomFactorY = 0.3 + Math.random() * 1.4;
+      // Use acceleration to create velocity with random direction changes
+      // Create random angle for direction variation
+      const randomAngle = Math.random() * Math.PI * 2; // Full circle
+      const speedMultiplier = 0.8 + Math.random() * 0.4; // 0.8 to 1.2 speed variation
       
-      // Apply random factors to velocity components
-      extraBall.vx = originalVx * randomFactorX;
-      extraBall.vy = originalVy * randomFactorY;
+      // Calculate base speed from acceleration magnitude
+      const accelMagnitude = Math.sqrt(originalAx * originalAx + originalAy * originalAy);
+      const baseSpeed = accelMagnitude * 8; // Scale acceleration to reasonable velocity
+      
+      // Apply random direction with speed variation
+      extraBall.vx = Math.cos(randomAngle) * baseSpeed * speedMultiplier;
+      extraBall.vy = Math.sin(randomAngle) * baseSpeed * speedMultiplier;
       
       // Ensure minimum speed to prevent balls from getting stuck
       const ballSpeed = Math.sqrt(extraBall.vx * extraBall.vx + extraBall.vy * extraBall.vy);
-      if (ballSpeed < 3) {
-        const speedMultiplier = 3 / ballSpeed;
-        extraBall.vx *= speedMultiplier;
-        extraBall.vy *= speedMultiplier;
+      if (ballSpeed < 4) {
+        const minSpeedMultiplier = 4 / ballSpeed;
+        extraBall.vx *= minSpeedMultiplier;
+        extraBall.vy *= minSpeedMultiplier;
       }
       
-      // Copy acceleration from main ball
+      // Set acceleration from main ball (same physics behavior)
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
