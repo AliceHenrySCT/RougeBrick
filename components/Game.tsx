@@ -90,6 +90,10 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
     () => (brick.canCollide.value ? '#1a1a1a' : 'transparent'),
     [brick.canCollide]
   );
+  
+  const brickX = useDerivedValue(() => brick.x.value + 1, [brick.x]);
+  const brickY = useDerivedValue(() => brick.y.value + 1, [brick.y]);
+  
   return (
     <>
       {/* Border layer - slightly larger dark rectangle */}
@@ -105,8 +109,8 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
       {/* Main brick - slightly smaller to show border */}
       <RoundedRect
         key={idx}
-        x={brick.x.value + 1}
-        y={brick.y.value + 1}
+        x={brickX}
+        y={brickY}
         width={brick.width - 2}
         height={brick.height - 2}
         color={color}
