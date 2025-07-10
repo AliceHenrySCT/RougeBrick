@@ -93,22 +93,17 @@ export default function PlayTab() {
   if (gameState === 'roundComplete') {
     return (
       <View style={styles.menuContainer}>
-        <Text style={styles.title}>🎉 Round Complete! 🎉</Text>
+        <Text style={styles.title}>Round Complete!</Text>
         <Text style={styles.scoreText}>Score: {currentScore}</Text>
         <Text style={styles.roundText}>Round {round} Complete</Text>
         {currentScore === highScore && (
-          <Text style={styles.newHighScore}>🎉 New High Score! 🎉</Text>
+          <Text style={styles.newHighScore}>New High Score!</Text>
         )}
         <Text style={styles.highScoreText}>High Score: {highScore}</Text>
         
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={startNextRound}>
-            <Text style={styles.buttonText}>Next Round</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={backToMenu}>
-            <Text style={[styles.buttonText, styles.secondaryButtonText]}>Main Menu</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.button} onPress={startNextRound}>
+          <Text style={styles.buttonText}>Next Round</Text>
+        </TouchableOpacity>
       </View>
     );
   }
