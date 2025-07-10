@@ -315,26 +315,32 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     hasSpawnedExtraBalls.value = true;
     
+    // Get the original ball's velocity components
+    const originalVx = circleObject.vx;
+    const originalVy = circleObject.vy;
+    
     for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
       const extraBall = extraBallObjects[i];
       // Spawn at same position as main ball
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Get the current velocity magnitude of the main ball
-      const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+      // Generate random velocity components that sum to the original velocity
+      // Random factor between 0.3 and 1.7 for variation
+      const randomFactorX = 0.3 + Math.random() * 1.4;
+      const randomFactorY = 0.3 + Math.random() * 1.4;
       
-      // Use a minimum speed of 5 if main ball is too slow
-      const useSpeed = Math.max(mainBallSpeed, 5);
+      // Apply random factors to velocity components
+      extraBall.vx = originalVx * randomFactorX;
+      extraBall.vy = originalVy * randomFactorY;
       
-      // Random angle between -45 and 45 degrees from the main ball's direction
-      const mainBallAngle = Math.atan2(circleObject.vx, -circleObject.vy);
-      const angleOffset = (Math.random() - 0.5) * Math.PI / 2; // -π/4 to π/4
-      const newAngle = mainBallAngle + angleOffset;
-      
-      // Apply the speed (minimum 5) in the new direction
-      extraBall.vx = Math.sin(newAngle) * useSpeed;
-      extraBall.vy = -Math.cos(newAngle) * useSpeed;
+      // Ensure minimum speed to prevent balls from getting stuck
+      const ballSpeed = Math.sqrt(extraBall.vx * extraBall.vx + extraBall.vy * extraBall.vy);
+      if (ballSpeed < 3) {
+        const speedMultiplier = 3 / ballSpeed;
+        extraBall.vx *= speedMultiplier;
+        extraBall.vy *= speedMultiplier;
+      }
       
       // Copy acceleration from main ball
       extraBall.ax = circleObject.ax;
