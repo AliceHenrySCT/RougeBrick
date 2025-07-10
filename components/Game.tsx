@@ -336,23 +336,26 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       console.log('Main ball position:', circleObject.x.value, circleObject.y.value);
       console.log('Main ball velocity:', circleObject.vx, circleObject.vy);
       
-      // Spawn extra balls with EXACT same properties as main ball
+      // Spawn extra balls near main ball with same velocity
       for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
         const extraBall = allExtraBalls[i];
         
-        // EXACT same position
-        extraBall.x.value = circleObject.x.value;
-        extraBall.y.value = circleObject.y.value;
+        // Position near main ball, offset by RADIUS
+        const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
+        const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
         
-        // EXACT same velocity
+        extraBall.x.value = circleObject.x.value + offsetX;
+        extraBall.y.value = circleObject.y.value + offsetY;
+        
+        // Same velocity as main ball
         extraBall.vx = circleObject.vx;
         extraBall.vy = circleObject.vy;
         
-        // EXACT same acceleration
+        // Same acceleration as main ball
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy}) offset=(${offsetX}, ${offsetY})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -383,23 +386,26 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (extraBallPowerUps.value > 0) {
       console.log('FORCING EXTRA BALL SPAWN AT RESPAWN');
       
-      // Spawn extra balls with EXACT same properties as main ball
+      // Spawn extra balls near main ball with same velocity
       for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
         const extraBall = allExtraBalls[i];
         
-        // EXACT same position
-        extraBall.x.value = circleObject.x.value;
-        extraBall.y.value = circleObject.y.value;
+        // Position near main ball, offset by RADIUS
+        const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
+        const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
         
-        // EXACT same velocity
+        extraBall.x.value = circleObject.x.value + offsetX;
+        extraBall.y.value = circleObject.y.value + offsetY;
+        
+        // Same velocity as main ball
         extraBall.vx = circleObject.vx;
         extraBall.vy = circleObject.vy;
         
-        // EXACT same acceleration
+        // Same acceleration as main ball
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy}) offset=(${offsetX}, ${offsetY})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -444,25 +450,24 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = allExtraBalls[i];
       
-      // Position at main ball location
-      extraBall.x.value = circleObject.x.value;
-      extraBall.y.value = circleObject.y.value;
+      // Position near main ball location, offset by RADIUS
+      const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
+      const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
+      
+      extraBall.x.value = circleObject.x.value + offsetX;
+      extraBall.y.value = circleObject.y.value + offsetY;
       
       console.log(`Extra ball ${i + 1} positioned at: x=${extraBall.x.value}, y=${extraBall.y.value}`);
       
-      // Create different angles for each ball
-      const angle = (Math.PI * 2 * i) / ballsToSpawn + Math.random() * 0.3;
-      
-      // Set velocity - use main ball's speed or minimum speed
-      const speed = Math.max(mainBallSpeed, 8); // Ensure minimum speed
-      extraBall.vx = speed * Math.cos(angle);
-      extraBall.vy = speed * Math.sin(angle);
+      // Copy exact velocity from main ball
+      extraBall.vx = circleObject.vx;
+      extraBall.vy = circleObject.vy;
       
       // Copy acceleration
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
-      console.log(`Extra ball ${i + 1}: speed=${speed}, vx=${extraBall.vx}, vy=${extraBall.vy}, angle=${angle}`);
+      console.log(`Extra ball ${i + 1}: vx=${extraBall.vx}, vy=${extraBall.vy}, offset=(${offsetX}, ${offsetY})`);
     }
   };
 
