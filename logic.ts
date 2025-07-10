@@ -285,9 +285,6 @@ export const animate = (
   }
 
   // Trigger extra ball spawning after first brick hit
-  if (brickCount.value >= 1 && spawnExtraBalls && hasSpawnedExtraBalls && !hasSpawnedExtraBalls.value) {
-    spawnExtraBalls();
-  }
 
   for (const o of objects) {
     if (o.type === "Circle") {
@@ -312,16 +309,15 @@ export const animate = (
   }
 
   for (const col of collisions) {
-    if (col.o2.type === "Brick") {
-      brickCount.value++;
-      score.value += 100; // Base score per brick
-    }
-    
     // Trigger extra ball spawning on first paddle hit
     if (col.o2.type === "Paddle" && spawnExtraBalls && hasSpawnedExtraBalls && !hasSpawnedExtraBalls.value) {
       spawnExtraBalls();
     }
     
+    if (col.o2.type === "Brick") {
+      brickCount.value++;
+      score.value += 100; // Base score per brick
+    }
     resolveCollisionWithBounce(col, hapticEnabled);
   }
 };
