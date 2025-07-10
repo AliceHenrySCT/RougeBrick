@@ -317,15 +317,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     hasSpawnedExtraBalls.value = true;
     
     // Use the original ball's initial velocity and acceleration values
-    const baseVx = 0; // Original ball starts with 0 velocity
-    const baseVy = 0;
-    const baseAx = 0.5; // Original ball's initial acceleration
-    const baseAy = 1;
+    const baseVx = 5; // Give extra balls initial velocity
+    const baseVy = 5;
+    const baseAx = 2; // Much higher initial acceleration
+    const baseAy = 3;
     
-    // Boost by 50%
-    const boostFactor = 1.5;
+    // Boost by 100% for faster movement
+    const boostFactor = 2.0;
     const boostedAx = baseAx * boostFactor;
     const boostedAy = baseAy * boostFactor;
+    const boostedVx = baseVx * boostFactor;
+    const boostedVy = baseVy * boostFactor;
     
     for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
       const extraBall = extraBallObjects[i];
@@ -333,14 +335,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Start with the same initial velocity as original ball (0, 0)
-      extraBall.vx = baseVx;
-      extraBall.vy = baseVy;
+      // Give extra balls significant initial velocity with random directions
+      const randomAngle = (Math.random() * Math.PI) - (Math.PI / 2); // -90° to +90°
+      extraBall.vx = boostedVx * Math.sin(randomAngle);
+      extraBall.vy = -Math.abs(boostedVy * Math.cos(randomAngle)); // Always upward
       
-      // Apply boosted acceleration with random direction variations
-      const randomAngle = Math.random() * Math.PI * 2; // Full circle
-      const axVariation = Math.cos(randomAngle) * 0.3; // ±30% variation
-      const ayVariation = Math.sin(randomAngle) * 0.3;
+      // Apply boosted acceleration with direction variations
+      const axVariation = Math.cos(randomAngle) * 0.5; // ±50% variation
+      const ayVariation = Math.sin(randomAngle) * 0.3; // ±30% variation
       
       extraBall.ax = boostedAx + (boostedAx * axVariation);
       extraBall.ay = boostedAy + (boostedAy * ayVariation);
