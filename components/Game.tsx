@@ -355,7 +355,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy}) offset=(${offsetX}, ${offsetY})`);
+        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -405,7 +405,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy}) offset=(${offsetX}, ${offsetY})`);
+        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -467,7 +467,22 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
-      console.log(`Extra ball ${i + 1}: vx=${extraBall.vx}, vy=${extraBall.vy}, offset=(${offsetX}, ${offsetY})`);
+      console.log(`Extra ball ${i + 1}: vx=${extraBall.vx}, vy=${extraBall.vy}`);
+      
+      // Trigger fake collision to randomize velocity
+      const fakeCollision = {
+        o1: extraBall,
+        o2: rectangleObject, // Use paddle as fake collision target
+        dx: 0,
+        dy: 0,
+        d: 0
+      };
+      
+      // Apply randomized velocity using existing collision logic
+      extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 1.2;
+      extraBall.vy = (Math.random() - 0.5) * MAX_SPEED * 1.2;
+      
+      console.log(`Extra ball ${i + 1} randomized velocity: vx=${extraBall.vx}, vy=${extraBall.vy}`);
     }
   };
 
