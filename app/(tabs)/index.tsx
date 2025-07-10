@@ -57,11 +57,7 @@ export default function PlayTab() {
     }
     
     if (won) {
-      // Auto-start next round after a brief delay
-      setTimeout(() => {
-        setRound(prev => prev + 1);
-        setGameState('playing');
-      }, 2000);
+      setGameState('roundComplete');
     } else {
       setGameState('gameOver');
     }
@@ -70,6 +66,11 @@ export default function PlayTab() {
   const startNewGame = () => {
     setCurrentScore(0);
     setRound(1);
+    setGameState('playing');
+  };
+
+  const startNextRound = () => {
+    setRound(prev => prev + 1);
     setGameState('playing');
   };
 
@@ -86,6 +87,29 @@ export default function PlayTab() {
         currentScore={currentScore}
         onTabVisibilityChange={setTabsVisible}
       />
+    );
+  }
+
+  if (gameState === 'roundComplete') {
+    return (
+      <View style={styles.menuContainer}>
+        <Text style={styles.title}>🎉 Round Complete! 🎉</Text>
+        <Text style={styles.scoreText}>Score: {currentScore}</Text>
+        <Text style={styles.roundText}>Round {round} Complete</Text>
+        {currentScore === highScore && (
+          <Text style={styles.newHighScore}>🎉 New High Score! 🎉</Text>
+        )}
+        <Text style={styles.highScoreText}>High Score: {highScore}</Text>
+        
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={startNextRound}>
+            <Text style={styles.buttonText}>Next Round</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={backToMenu}>
+            <Text style={[styles.buttonText, styles.secondaryButtonText]}>Main Menu</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   }
 
@@ -194,6 +218,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: 'transparent',
+    borderWidth: 2,
     borderColor: '#6200EE',
   },
   buttonText: {
