@@ -330,6 +330,16 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     const velocityMagnitude = Math.sqrt(mainBallVx * mainBallVx + mainBallVy * mainBallVy);
     const accelerationMagnitude = Math.sqrt(mainBallAx * mainBallAx + mainBallAy * mainBallAy);
     
+    // Log original ball values
+    console.log(`=== ORIGINAL BALL VALUES ===`);
+    console.log(`Position: (${circleObject.x.value.toFixed(2)}, ${circleObject.y.value.toFixed(2)})`);
+    console.log(`Velocity: vx=${mainBallVx.toFixed(2)}, vy=${mainBallVy.toFixed(2)}`);
+    console.log(`Acceleration: ax=${mainBallAx.toFixed(2)}, ay=${mainBallAy.toFixed(2)}`);
+    console.log(`Velocity magnitude: ${velocityMagnitude.toFixed(2)}`);
+    console.log(`Acceleration magnitude: ${accelerationMagnitude.toFixed(2)}`);
+    console.log(`Velocity direction: ${Math.atan2(mainBallVy, mainBallVx).toFixed(2)} radians (${(Math.atan2(mainBallVy, mainBallVx) * 180 / Math.PI).toFixed(1)}°)`);
+    console.log(`Acceleration direction: ${Math.atan2(mainBallAy, mainBallAx).toFixed(2)} radians (${(Math.atan2(mainBallAy, mainBallAx) * 180 / Math.PI).toFixed(1)}°)`);
+    
     // Spawn all extra balls at once with proper initialization
     for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = extraBallObjects[i];
