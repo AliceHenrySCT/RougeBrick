@@ -109,8 +109,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
         height={brickMainHeight}
         color={color}
         r={3}
-      >
-      </RoundedRect>
+      />
     </>
   );
 };
