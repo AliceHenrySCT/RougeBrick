@@ -328,13 +328,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       
       // Generate random velocity components that sum to original total
       const randomAngle = Math.random() * Math.PI * 2;
-      const speedVariation = (0.8 + Math.random() * 0.4) * 2; // Double the speed (160% to 240% of original)
+      const speedVariation = (1.5 + Math.random() * 1.0); // 150% to 250% of original speed
       
-      extraBall.vx = Math.cos(randomAngle) * totalSpeed * speedVariation;
-      extraBall.vy = Math.sin(randomAngle) * totalSpeed * speedVariation;
+      const newSpeed = Math.max(totalSpeed * speedVariation, 60); // Minimum speed of 60
+      extraBall.vx = Math.cos(randomAngle) * newSpeed;
+      extraBall.vy = Math.sin(randomAngle) * newSpeed;
       
       // Generate random acceleration split that totals 4
-      const totalAcceleration = 4;
+      const totalAcceleration = 8; // Increased acceleration
       const randomSplit = Math.random(); // 0 to 1
       
       // Split the total acceleration randomly between ax and ay

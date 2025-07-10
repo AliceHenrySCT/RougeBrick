@@ -14,7 +14,7 @@ const { width, height } = Dimensions.get("window");
 
 const move = (object: ShapeInterface, dt: number) => {
   "worklet";
-  if (object.type === "Circle" && object.x.value > -50) { // Only move visible balls
+  if (object.type === "Circle") {
     object.vx += object.ax * dt;
     object.vy += object.ay * dt;
     
@@ -34,8 +34,11 @@ const move = (object: ShapeInterface, dt: number) => {
       }
     }
     
-    object.x.value += object.vx * dt;
-    object.y.value += object.vy * dt;
+    // Only move if ball is visible (not hidden off-screen)
+    if (object.x.value > -50) {
+      object.x.value += object.vx * dt;
+      object.y.value += object.vy * dt;
+    }
   }
 };
 
