@@ -317,6 +317,11 @@ export const animate = (
       score.value += 100; // Base score per brick
     }
     
+    // Trigger extra ball spawning on first paddle hit
+    if (col.o2.type === "Paddle" && spawnExtraBalls && hasSpawnedExtraBalls && !hasSpawnedExtraBalls.value) {
+      spawnExtraBalls();
+    }
+    
     resolveCollisionWithBounce(col, hapticEnabled);
   }
 };
