@@ -479,13 +479,11 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     [currentLives]
   );
   const currentSpeedText = useDerivedValue(() => {
-    const speed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
-    return `Speed: ${speed.toFixed(1)}`;
+    return `vx: ${circleObject.vx.toFixed(1)}`;
   }, [circleObject.vx, circleObject.vy]);
-  const maxSpeedText = useDerivedValue(
-    () => `Max: ${MAX_SPEED}`,
-    []
-  );
+  const vyText = useDerivedValue(() => {
+    return `vy: ${circleObject.vy.toFixed(1)}`;
+  }, [circleObject.vx, circleObject.vy]);
   const uniforms = useDerivedValue(
     () => ({
       iResolution: resolution,
@@ -580,9 +578,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
             <SkiaText
               x={20}
               y={height - 60}
-              text={maxSpeedText}
+              text={vyText}
               font={speedFont}
-              color="#FFFF00"
+              color="#00FFFF"
             />
           </Canvas>
         </View>
