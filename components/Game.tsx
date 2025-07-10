@@ -366,13 +366,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
       
+      // Calculate the actual magnitude of the extra ball's velocity
+      const extraBallVelocityMagnitude = Math.sqrt(extraBall.vx * extraBall.vx + extraBall.vy * extraBall.vy);
+      
       // Debug: Log that we're spawning this ball with full details
       console.log(`Spawning extra ball ${i + 1}/${ballsToSpawn}:`);
       console.log(`  Position: (${extraBall.x.value.toFixed(2)}, ${extraBall.y.value.toFixed(2)})`);
       console.log(`  Velocity: vx=${extraBall.vx.toFixed(2)}, vy=${extraBall.vy.toFixed(2)}`);
+      console.log(`  Velocity magnitude: ${extraBallVelocityMagnitude.toFixed(2)} (should be ${velocityMagnitude.toFixed(2)})`);
       console.log(`  Acceleration: ax=${extraBall.ax.toFixed(2)}, ay=${extraBall.ay.toFixed(2)}`);
       console.log(`  Velocity Direction: ${randomAngle.toFixed(2)} radians (${(randomAngle * 180 / Math.PI).toFixed(1)}°)`);
-      console.log(`  Acceleration: mirrors original ball exactly`);
+      console.log(`  Speed difference: ${(extraBallVelocityMagnitude - velocityMagnitude).toFixed(2)}`);
     }
     
     // Debug: Log summary
@@ -380,6 +384,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     console.log(`Total extra balls spawned: ${ballsToSpawn}`);
     console.log(`Main ball velocity magnitude: ${velocityMagnitude.toFixed(2)}`);
     console.log(`Main ball acceleration magnitude: ${accelerationMagnitude.toFixed(2)}`);
+    console.log(`All extra balls should have velocity magnitude: ${velocityMagnitude.toFixed(2)}`);
   };
 
   // Save recent score function
