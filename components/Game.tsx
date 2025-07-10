@@ -320,43 +320,53 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     // Cap the number of extra balls to spawn (max 9 to keep total at 10)
     const ballsToSpawn = Math.min(ballCount.value, 9);
     
-    // Use the original ball's initial velocity and acceleration values
-    const baseVx = 5; // Give extra balls initial velocity
-    const baseVy = 5;
-    const baseAx = 2; // Much higher initial acceleration
-    const baseAy = 3;
+    // Use much higher base values for extra balls
+    const baseVx = 8; // Higher initial velocity
+    const baseVy = 8;
+    const baseAx = 4; // Higher initial acceleration
+    const baseAy = 4;
     
-    // Boost by 100% for faster movement
-    const boostFactor = 2.0;
+    // Boost by 150% for much faster movement
+    const boostFactor = 2.5;
     const boostedAx = baseAx * boostFactor;
     const boostedAy = baseAy * boostFactor;
     const boostedVx = baseVx * boostFactor;
     const boostedVy = baseVy * boostFactor;
     
-    // Spawn all extra balls at once
+    // Spawn all extra balls at once with proper initialization
     for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = extraBallObjects[i];
-      // Spawn at same position as main ball
+      
+      // Spawn at same position as main ball with slight offset
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Distribute balls evenly across angles for better spread
-      const angleStep = Math.PI / (ballsToSpawn + 1); // Divide 180° evenly
-      const randomAngle = -Math.PI/2 + (angleStep * (i + 1)) + (Math.random() * 0.3 - 0.15); // Add small random variation
+      // Create more varied angles for better spread
+      const angleRange = Math.PI * 0.8; // 144 degrees spread
+      const angleStep = angleRange / (ballsToSpawn + 1);
+      const baseAngle = -Math.PI/2 - angleRange/2; // Start from left side
+      const randomAngle = baseAngle + (angleStep * (i + 1)) + (Math.random() * 0.4 - 0.2);
       
+      // Set velocity with the calculated angle
       extraBall.vx = boostedVx * Math.sin(randomAngle);
-      extraBall.vy = -Math.abs(boostedVy * Math.cos(randomAngle)); // Always upward
+      extraBall.vy = boostedVy * Math.cos(randomAngle); // Can go up or down initially
       
-      // Apply boosted acceleration with direction variations
-      const axVariation = Math.cos(randomAngle) * 0.5; // ±50% variation
-      const ayVariation = Math.sin(randomAngle) * 0.3; // ±30% variation
+      // Apply acceleration with more variation
+      const axVariation = (Math.random() - 0.5) * 2; // ±100% variation
+      const ayVariation = (Math.random() - 0.5) * 1; // ±50% variation
       
       extraBall.ax = boostedAx + (boostedAx * axVariation);
       extraBall.ay = boostedAy + (boostedAy * ayVariation);
       
       // Set mass to ensure proper physics
       extraBall.m = RADIUS * 10;
+      
+      // Debug: Log that we're spawning this ball
+      console.log(`Spawning extra ball ${i + 1}/${ballsToSpawn} at position (${extraBall.x.value}, ${extraBall.y.value})`);
     }
+    
+    // Debug: Log total balls spawned
+    console.log(`Total extra balls spawned: ${ballsToSpawn}`);
   };
   // Save recent score function
   const saveRecentScore = async (finalScore: number, finalRound: number) => {
