@@ -6,12 +6,16 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTabVisibility } from './_layout';
+import { Zap, Shield, Target } from 'lucide-react-native';
+
+type PowerUp = 'speed' | 'shield' | 'precision' | null;
 
 export default function PlayTab() {
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameOver'>('menu');
   const [currentScore, setCurrentScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [round, setRound] = useState(1);
+  const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
   const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
@@ -70,6 +74,7 @@ export default function PlayTab() {
   };
 
   const startNextRound = () => {
+    setSelectedPowerUp(null); // Reset power-up selection
     setRound(prev => prev + 1);
     setGameState('playing');
   };
@@ -91,6 +96,30 @@ export default function PlayTab() {
   }
 
   if (gameState === 'roundComplete') {
+    const powerUps = [
+      {
+        id: 'speed' as const,
+        name: 'Speed Boost',
+        description: 'Faster ball movement',
+        icon: Zap,
+        color: '#FFD700',
+      },
+      {
+        id: 'shield' as const,
+        name: 'Extra Life',
+        description: 'One free miss',
+        icon: Shield,
+        color: '#00FF00',
+      },
+      {
+        id: 'precision' as const,
+        name: 'Precision',
+        description: 'Better ball control',
+        icon: Target,
+        color: '#FF6B6B',
+      },
+    ];
+
     return (
       <View style={styles.menuContainer}>
         <Text style={styles.title}>Round Complete!</Text>
@@ -100,8 +129,56 @@ export default function PlayTab() {
           <Text style={styles.newHighScore}>New High Score!</Text>
         )}
         
-        <TouchableOpacity style={styles.button} onPress={startNextRound}>
-          <Text style={styles.buttonText}>Next Round</Text>
+        <View style={styles.powerUpSection}>
+          <Text style={styles.powerUpTitle}>Choose Your Power-Up</Text>
+          <View style={styles.powerUpContainer}>
+            {powerUps.map((powerUp) => {
+              const IconComponent = powerUp.icon;
+              const isSelected = selectedPowerUp === powerUp.id;
+              
+              return (
+                <TouchableOpacity
+                  key={powerUp.id}
+                  style={[
+                    styles.powerUpBox,
+                    isSelected && styles.powerUpBoxSelected,
+                    { borderColor: powerUp.color }
+                  ]}
+                  onPress={() => setSelectedPowerUp(powerUp.id)}
+                >
+                  <IconComponent 
+                    size={32} 
+                    color={isSelected ? powerUp.color : '#666'} 
+                  />
+                  <Text style={[
+                    styles.powerUpName,
+                    isSelected && { color: powerUp.color }
+                  ]}>
+                    {powerUp.name}
+                  </Text>
+                  <Text style={styles.powerUpDescription}>
+                    {powerUp.description}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+        
+        <TouchableOpacity 
+          style={[
+            styles.button,
+            !selectedPowerUp && styles.buttonDisabled
+          ]} 
+          onPress={startNextRound}
+          disabled={!selectedPowerUp}
+        >
+          <Text style={[
+            styles.buttonText,
+            !selectedPowerUp && styles.buttonTextDisabled
+          ]}>
+            Next Round
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -232,5 +309,59 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 8,
     fontFamily: 'Inter-Regular',
+  },
+  powerUpSection: {
+    width: '100%',
+    marginVertical: 30,
+  },
+  powerUpTitle: {
+    fontSize: 20,
+    color: '#fff',
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  powerUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingHorizontal: 10,
+  },
+  powerUpBox: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#333',
+    padding: 16,
+    alignItems: 'center',
+    minHeight: 120,
+    justifyContent: 'center',
+  },
+  powerUpBoxSelected: {
+    backgroundColor: '#2a2a2a',
+    transform: [{ scale: 1.05 }],
+  },
+  powerUpName: {
+    fontSize: 14,
+    color: '#ccc',
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  powerUpDescription: {
+    fontSize: 11,
+    color: '#888',
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  buttonDisabled: {
+    backgroundColor: '#333',
+    opacity: 0.5,
+  },
+  buttonTextDisabled: {
+    color: '#666',
   },
 });
