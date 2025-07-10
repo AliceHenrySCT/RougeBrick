@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
     borderColor: '#6200EE',
   },
   buttonText: {

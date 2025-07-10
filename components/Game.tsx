@@ -135,7 +135,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldTriggerGameEnd = useSharedValue(false);
   const gameWon = useSharedValue(false);
   const hapticEnabled = useSharedValue(true);
-  const hapticTrigger = useSharedValue(false);
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -359,21 +358,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     });
 
   // End-of-game overlay values
-  const opacity = useDerivedValue(
-    () =>
-      brickCount.value >= 5
-        ? 1
-        : 0,
-    [brickCount]
-  );
-  const textPosition = useDerivedValue(() => {
-    const endText = 'ROUND COMPLETE!';
-    return (width - font.measureText(endText).width) / 2;
-  }, [brickCount]);
-  const gameEndingText = useDerivedValue(
-    () => 'ROUND COMPLETE!',
-    []
-  );
   const scoreText = useDerivedValue(
     () => `Score: ${score.value}`,
     [score]
@@ -425,21 +409,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
             {bricks.map((brick, idx) => (
               <Brick key={idx} idx={idx} brick={brick} />
             ))}
-            <Rect x={0} y={0} width={width} height={height} color={'red'} opacity={opacity}>
-              <LinearGradient
-                start={vec(0, 200)}
-                end={vec(0, 500)}
-                colors={['#4070D3', '#EA2F86']}
-              />
-            </Rect>
-            <SkiaText
-              x={textPosition}
-              y={height / 2}
-              text={gameEndingText}
-              font={font}
-              opacity={opacity}
-              color="white"
-            />
             <SkiaText
               x={width / 2 - 40}
               y={60}
