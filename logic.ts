@@ -17,18 +17,23 @@ const move = (object: ShapeInterface, dt: number) => {
   if (object.type === "Circle" && object.x.value > -50) { // Only move visible balls
     object.vx += object.ax * dt;
     object.vy += object.ay * dt;
-    if (object.vx > MAX_SPEED) {
-      object.vx = MAX_SPEED;
+    
+    // Only apply speed limits to the main ball (id = 0)
+    if (object.id === 0) {
+      if (object.vx > MAX_SPEED) {
+        object.vx = MAX_SPEED;
+      }
+      if (object.vx < -MAX_SPEED) {
+        object.vx = -MAX_SPEED;
+      }
+      if (object.vy > MAX_SPEED) {
+        object.vy = MAX_SPEED;
+      }
+      if (object.vy < -MAX_SPEED) {
+        object.vy = -MAX_SPEED;
+      }
     }
-    if (object.vx < -MAX_SPEED) {
-      object.vx = -MAX_SPEED;
-    }
-    if (object.vy > MAX_SPEED) {
-      object.vy = MAX_SPEED;
-    }
-    if (object.vy < -MAX_SPEED) {
-      object.vy = -MAX_SPEED;
-    }
+    
     object.x.value += object.vx * dt;
     object.y.value += object.vy * dt;
   }
