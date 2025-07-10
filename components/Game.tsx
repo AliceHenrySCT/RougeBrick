@@ -47,6 +47,7 @@ interface GameProps {
   lives: number;
   onLivesChange: (lives: number) => void;
   extraBalls: number;
+  onExtraBallsChange: (extraBalls: number) => void;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -115,7 +116,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const currentLives = useSharedValue(lives);
@@ -217,7 +218,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   };
 
   // Create extra ball objects
-  for (let i = 0; i < 5; i++) { // Max 5 extra balls
+  for (let i = 0; i < 9; i++) { // Max 9 extra balls (10 total with main ball)
     extraBallObjects.push({
       type: 'Circle',
       id: i + 1,
@@ -316,6 +317,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     hasSpawnedExtraBalls.value = true;
     
+    // Cap the number of extra balls to spawn (max 9 to keep total at 10)
+    const ballsToSpawn = Math.min(ballCount.value, 9);
+    
     // Use the original ball's initial velocity and acceleration values
     const baseVx = 5; // Give extra balls initial velocity
     const baseVy = 5;
@@ -329,14 +333,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     const boostedVx = baseVx * boostFactor;
     const boostedVy = baseVy * boostFactor;
     
-    for (let i = 0; i < ballCount.value && i < extraBallObjects.length; i++) {
+    // Spawn all extra balls at once
+    for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = extraBallObjects[i];
       // Spawn at same position as main ball
       extraBall.x.value = circleObject.x.value;
       extraBall.y.value = circleObject.y.value;
       
-      // Give extra balls significant initial velocity with random directions
-      const randomAngle = (Math.random() * Math.PI) - (Math.PI / 2); // -90° to +90°
+      // Distribute balls evenly across angles for better spread
+      const angleStep = Math.PI / (ballsToSpawn + 1); // Divide 180° evenly
+      const randomAngle = -Math.PI/2 + (angleStep * (i + 1)) + (Math.random() * 0.3 - 0.15); // Add small random variation
+      
       extraBall.vx = boostedVx * Math.sin(randomAngle);
       extraBall.vy = -Math.abs(boostedVy * Math.cos(randomAngle)); // Always upward
       

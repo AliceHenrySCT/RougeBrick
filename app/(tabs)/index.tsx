@@ -85,7 +85,7 @@ export default function PlayTab() {
     if (selectedPowerUp === 'shield') {
       setLives(prev => prev + 1); // Extra life power-up
     } else if (selectedPowerUp === 'extraBall') {
-      setExtraBalls(prev => prev + 1); // Extra ball power-up
+      setExtraBalls(prev => Math.min(prev + 1, 9)); // Extra ball power-up (cap at 9 for 10 total)
     }
     
     setGameState('playing');
@@ -102,6 +102,10 @@ export default function PlayTab() {
     setLives(newLives);
   };
 
+  const handleExtraBallsChange = (newExtraBalls: number) => {
+    setExtraBalls(newExtraBalls);
+  };
+
   if (gameState === 'playing') {
     return (
       <Game 
@@ -112,6 +116,7 @@ export default function PlayTab() {
         lives={lives}
         onLivesChange={handleLivesChange}
         extraBalls={extraBalls}
+        onExtraBallsChange={handleExtraBallsChange}
       />
     );
   }
@@ -152,6 +157,11 @@ export default function PlayTab() {
         
         <View style={styles.powerUpSection}>
           <Text style={styles.powerUpTitle}>Choose Your Power-Up</Text>
+          {extraBalls > 0 && (
+            <Text style={styles.extraBallsInfo}>
+              Extra Balls: {extraBalls} (Total: {extraBalls + 1})
+            </Text>
+          )}
           <View style={styles.powerUpContainer}>
             {powerUps.map((powerUp) => {
               const IconComponent = powerUp.icon;
@@ -384,5 +394,12 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#666',
+  },
+  extraBallsInfo: {
+    fontSize: 16,
+    color: '#FFD700',
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+    marginBottom: 15,
   },
 });
