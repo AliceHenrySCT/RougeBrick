@@ -21,23 +21,21 @@ import {
   useFrameCallback,
 } from 'react-native-reanimated';
 import {
-  BRICK_HEIGHT,
-  BRICK_ROW_LENGTH,
-  BRICK_WIDTH,
-  BRICK_START_Y,
   height,
-  BALL_COLOR,
-  PADDLE_HEIGHT,
-  PADDLE_MIDDLE,
-  PADDLE_WIDTH,
-  TOTAL_BRICKS,
   width,
   RADIUS,
   MAX_SPEED,
 } from '../constants';
-import { animate, createBouncingExample } from '../logic';
-import { BrickInterface, CircleInterface, PaddleInterface } from '../types';
+import { animate } from '../logic';
+import { CircleInterface } from '../types';
 import { shader } from '../shader';
+import { useGameState } from './game/GameState';
+import { getDifficultyAdjustedSpeed, getDifficultyAdjustedPaddleWidth, getDifficultyScoreMultiplier } from './game/DifficultyUtils';
+import { createGameObjects } from './game/GameObjects';
+import { createExtraBallSpawner } from './game/ExtraBallSystem';
+import { createGameResetFunctions } from './game/GameReset';
+import { saveRecentScore } from './game/ScoreManager';
+import { Brick } from './game/BrickComponent';
 
 interface GameProps {
   onGameEnd: (score: number, won: boolean) => void;
@@ -50,203 +48,51 @@ interface GameProps {
   onExtraBallsChange: (extraBalls: number) => void;
   speedBoostCount: number;
   difficulty: 'easy' | 'normal' | 'hard';
-  difficulty: 'easy' | 'normal' | 'hard';
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
-const fontStyle = { fontFamily, fontSize: 32}; // Reduced from 55 to 32
+const fontStyle = { fontFamily, fontSize: 32 };
 const font = matchFont(fontStyle);
 const scoreFont = matchFont({ fontFamily, fontSize: 16 });
 const livesFont = matchFont({ fontFamily, fontSize: 16 });
 const resolution = vec(width, height);
 
-// Helper function to calculate row color gradient
-const getRowColor = (rowIndex: number, totalRows: number) => {
-  'worklet';
-  const progress = rowIndex / (totalRows - 1);
-  // Interpolate from bright purple (200, 0, 200) to blue (0, 0, 255)
-  const red = Math.round(200 * (1 - progress));
-  const green = 0;
-  const blue = Math.round(200 + (55 * progress));
-  return `rgb(${red}, ${green}, ${blue})`;
-};
-
-// Brick component
-const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
-  // Calculate row number for color gradient
-  const row = Math.floor(idx / BRICK_ROW_LENGTH);
-  const totalRows = Math.ceil(TOTAL_BRICKS / BRICK_ROW_LENGTH);
-  
-  const color = useDerivedValue(
-    () => (brick.canCollide.value ? getRowColor(row, totalRows) : 'transparent'),
-    [brick.canCollide]
-  );
-  const borderColor = useDerivedValue(
-    () => (brick.canCollide.value ? '#1a1a1a' : 'transparent'),
-    [brick.canCollide]
-  );
-  
-  const brickMainX = useDerivedValue(() => brick.x.value + 1, [brick.x]);
-  const brickMainY = useDerivedValue(() => brick.y.value + 1, [brick.y]);
-  const brickMainWidth = useDerivedValue(() => brick.width - 2, []);
-  const brickMainHeight = useDerivedValue(() => brick.height - 2, []);
-  
-  return (
-    <>
-      {/* Border layer - slightly larger dark rectangle */}
-      <RoundedRect
-        key={`${idx}-border`}
-        x={brick.x}
-        y={brick.y}
-        width={BRICK_WIDTH}
-        height={BRICK_HEIGHT}
-        color={borderColor}
-        r={4}
-      />
-      {/* Main brick - slightly smaller to show border */}
-      <RoundedRect
-        key={idx}
-        x={brickMainX}
-        y={brickMainY}
-        width={brickMainWidth}
-        height={brickMainHeight}
-        color={color}
-        r={3}
-      />
-    </>
-  );
-};
-
 // Main Game component
 const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange, speedBoostCount, difficulty }) => {
-  const brickCount = useSharedValue(0);
-  const score = useSharedValue(currentScore);
-  const currentLives = useSharedValue(lives);
   const clock = useClock();
-  const gameEnded = useSharedValue(false);
-  const shouldSaveScore = useSharedValue(false);
-  const finalScoreToSave = useSharedValue(0);
-  const finalRoundToSave = useSharedValue(0);
-  const shouldTriggerGameEnd = useSharedValue(false);
-  const gameWon = useSharedValue(false);
-  const hapticEnabled = useSharedValue(true);
-  const shouldUpdateLives = useSharedValue(false);
-  const newLivesCount = useSharedValue(0);
-  
-  // Score multiplier based on difficulty
-  const scoreMultiplier = useSharedValue(1.0);
-  
-  // Extra ball system
-  const extraBallPowerUps = useSharedValue(extraBalls); // Number of extra ball power-ups available
-  const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
-  const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
-  const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
-  const currentMaxSpeed = useSharedValue(MAX_SPEED + (speedBoostCount * 5)); // Dynamic max speed
-  
+
+  // Initialize game state
+  const gameState = useGameState(currentScore, lives, extraBalls, speedBoostCount, difficulty);
+
   // Calculate difficulty-adjusted values
-  const getDifficultyAdjustedSpeed = (baseSpeed: number) => {
-    switch (difficulty) {
-      case 'easy':
-        return baseSpeed - 15;
-      case 'hard':
-        return baseSpeed + 15;
-      default:
-        return baseSpeed;
-    }
-  };
-  
-  const getDifficultyAdjustedPaddleWidth = () => {
-    switch (difficulty) {
-      case 'easy':
-        return PADDLE_WIDTH * 1.2; // 20% wider
-      case 'hard':
-        return PADDLE_WIDTH * 0.8; // 20% narrower
-      default:
-        return PADDLE_WIDTH;
-    }
-  };
-  
-  const getDifficultyScoreMultiplier = () => {
-    switch (difficulty) {
-      case 'easy':
-        return 0.8; // -20% score
-      case 'hard':
-        return 1.2; // +20% score
-      default:
-        return 1.0; // Normal score
-    }
-  };
-  
-  const adjustedPaddleWidth = getDifficultyAdjustedPaddleWidth();
+  const adjustedPaddleWidth = getDifficultyAdjustedPaddleWidth(difficulty);
   const adjustedPaddleMiddle = width / 2 - adjustedPaddleWidth / 2;
-  
-  // Create extra ball objects (max 5 for simplicity)
-  const extraBall1: CircleInterface = {
-    type: 'Circle',
-    id: 1,
-    x: useSharedValue(-1000),
-    y: useSharedValue(-1000),
-    r: RADIUS,
-    m: RADIUS * 10,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-  
-  const extraBall2: CircleInterface = {
-    type: 'Circle',
-    id: 2,
-    x: useSharedValue(-1000),
-    y: useSharedValue(-1000),
-    r: RADIUS,
-    m: RADIUS * 10,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-  
-  const extraBall3: CircleInterface = {
-    type: 'Circle',
-    id: 3,
-    x: useSharedValue(-1000),
-    y: useSharedValue(-1000),
-    r: RADIUS,
-    m: RADIUS * 10,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-  
-  const extraBall4: CircleInterface = {
-    type: 'Circle',
-    id: 4,
-    x: useSharedValue(-1000),
-    y: useSharedValue(-1000),
-    r: RADIUS,
-    m: RADIUS * 10,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-  
-  const extraBall5: CircleInterface = {
-    type: 'Circle',
-    id: 5,
-    x: useSharedValue(-1000),
-    y: useSharedValue(-1000),
-    r: RADIUS,
-    m: RADIUS * 10,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-  
-  const allExtraBalls = [extraBall1, extraBall2, extraBall3, extraBall4, extraBall5];
+
+  // Create game objects
+  const { circleObject, rectangleObject, allExtraBalls, bricks } = createGameObjects(adjustedPaddleWidth, adjustedPaddleMiddle);
+
+  // Create extra ball spawner
+  const { spawnExtraBalls, copyVelocityToExtraBalls } = createExtraBallSpawner(
+    circleObject,
+    rectangleObject,
+    allExtraBalls,
+    gameState.extraBallPowerUps,
+    gameState.hasUsedExtraBalls,
+    gameState.extraBallSpawnTime
+  );
+
+  // Create reset functions
+  const { resetGame, respawnBall } = createGameResetFunctions(
+    circleObject,
+    rectangleObject,
+    allExtraBalls,
+    bricks,
+    adjustedPaddleMiddle,
+    gameState.brickCount,
+    gameState.gameEnded,
+    gameState.extraBallSpawnTime,
+    gameState.shouldCopyVelocity
+  );
 
   // Hide tabs when game component mounts and show when unmounts
   useEffect(() => {
@@ -262,7 +108,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       try {
         const savedHaptic = await AsyncStorage.getItem('hapticEnabled');
         if (savedHaptic !== null) {
-          hapticEnabled.value = JSON.parse(savedHaptic);
+          gameState.hapticEnabled.value = JSON.parse(savedHaptic);
         }
       } catch (error) {
         console.error('Error loading haptic setting:', error);
@@ -273,21 +119,21 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
 
   // Update lives when prop changes
   useEffect(() => {
-    currentLives.value = lives;
-    extraBallPowerUps.value = extraBalls;
-    hasUsedExtraBalls.value = false;
-    currentMaxSpeed.value = getDifficultyAdjustedSpeed(MAX_SPEED + (speedBoostCount * 5));
+    gameState.currentLives.value = lives;
+    gameState.extraBallPowerUps.value = extraBalls;
+    gameState.hasUsedExtraBalls.value = false;
+    gameState.currentMaxSpeed.value = getDifficultyAdjustedSpeed(MAX_SPEED + (speedBoostCount * 5), difficulty);
   }, [lives, extraBalls, speedBoostCount]);
 
   // Update score multiplier when difficulty changes
   useEffect(() => {
-    scoreMultiplier.value = getDifficultyScoreMultiplier();
+    gameState.scoreMultiplier.value = getDifficultyScoreMultiplier(difficulty);
   }, [difficulty]);
 
   // Watch for haptic trigger changes
   useEffect(() => {
     const checkHapticTrigger = () => {
-      if (hapticEnabled.value && Platform.OS !== 'web') {
+      if (gameState.hapticEnabled.value && Platform.OS !== 'web') {
         try {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         } catch (error) {
@@ -297,13 +143,13 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     };
     
     // Use a simple polling mechanism to detect changes
-    let lastHapticState = hapticEnabled.value;
+    let lastHapticState = gameState.hapticEnabled.value;
     const interval = setInterval(() => {
-      if (hapticEnabled.value !== lastHapticState) {
-        if (hapticEnabled.value) {
+      if (gameState.hapticEnabled.value !== lastHapticState) {
+        if (gameState.hapticEnabled.value) {
           checkHapticTrigger();
         }
-        lastHapticState = hapticEnabled.value;
+        lastHapticState = gameState.hapticEnabled.value;
       }
     }, 16); // Check every frame
     
@@ -313,9 +159,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Watch for lives update trigger
   useEffect(() => {
     const checkLivesUpdate = () => {
-      if (shouldUpdateLives.value) {
-        onLivesChange(newLivesCount.value);
-        shouldUpdateLives.value = false;
+      if (gameState.shouldUpdateLives.value) {
+        onLivesChange(gameState.newLivesCount.value);
+        gameState.shouldUpdateLives.value = false;
       }
     };
     
@@ -323,182 +169,12 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     return () => clearInterval(interval);
   }, [onLivesChange]);
 
-  // Circle (ball) initial state
-  const circleObject: CircleInterface = {
-    type: 'Circle',
-    id: 0,
-    x: useSharedValue(0),
-    y: useSharedValue(0),
-    r: RADIUS,
-    m: 0,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-  };
-
-  // Paddle initial state
-  const rectangleObject: PaddleInterface = {
-    type: 'Paddle',
-    id: 0,
-    x: useSharedValue(adjustedPaddleMiddle),
-    y: useSharedValue(height - 100),
-    m: 0,
-    ax: 0,
-    ay: 0,
-    vx: 0,
-    vy: 0,
-    width: adjustedPaddleWidth,
-    height: PADDLE_HEIGHT,
-  };
-
-  // Generate bricks in a solid wall formation
-  const bricks: BrickInterface[] = Array(TOTAL_BRICKS)
-    .fill(0)
-    .map((_, idx) => {
-      const row = Math.floor(idx / BRICK_ROW_LENGTH);
-      const col = idx % BRICK_ROW_LENGTH;
-      const x = col * BRICK_WIDTH; // No gaps between bricks
-      const y = BRICK_START_Y + row * BRICK_HEIGHT; // No gaps between rows
-      return {
-        type: 'Brick',
-        id: idx,
-        x: useSharedValue(x),
-        y: useSharedValue(y),
-        m: 0,
-        ax: 0,
-        ay: 0,
-        vx: 0,
-        vy: 0,
-        width: BRICK_WIDTH,
-        height: BRICK_HEIGHT,
-        canCollide: useSharedValue(true),
-      };
-    });
-
-  // Reset game to initial state
-  const resetGame = () => {
-    'worklet';
-    rectangleObject.x.value = adjustedPaddleMiddle;
-    createBouncingExample(circleObject);
-    
-    // Reset extra ball timing flags
-    extraBallSpawnTime.value = 0;
-    shouldCopyVelocity.value = false;
-    
-    // Reset all extra balls - they will spawn only when main ball hits paddle
-    for (const extraBall of allExtraBalls) {
-      extraBall.x.value = -1000;
-      extraBall.y.value = -1000;
-      extraBall.vx = 0;
-      extraBall.vy = 0;
-      extraBall.ax = 0;
-      extraBall.ay = 0;
-    }
-    
-    for (const brick of bricks) {
-      brick.canCollide.value = true;
-    }
-    brickCount.value = 0;
-    gameEnded.value = false;
-  };
-
-  // Respawn ball without resetting bricks
-  const respawnBall = () => {
-    'worklet';
-    rectangleObject.x.value = adjustedPaddleMiddle;
-    createBouncingExample(circleObject);
-    
-    // Reset extra ball timing flags
-    extraBallSpawnTime.value = 0;
-    shouldCopyVelocity.value = false;
-    
-    // Reset all extra balls - they will spawn only when main ball hits paddle
-    for (const extraBall of allExtraBalls) {
-      extraBall.x.value = -1000;
-      extraBall.y.value = -1000;
-      extraBall.vx = 0;
-      extraBall.vy = 0;
-      extraBall.ax = 0;
-      extraBall.ay = 0;
-    }
-  };
-
-  // Initialize ball
-  createBouncingExample(circleObject);
-
-  // Simple extra ball spawning method
-  const spawnExtraBalls = () => {
-    'worklet';
-    
-    // Check if we have power-ups and haven't used them yet
-    if (extraBallPowerUps.value <= 0 || hasUsedExtraBalls.value) {
-      return;
-    }
-    
-    // Mark as used
-    hasUsedExtraBalls.value = true;
-    
-    // Record spawn time for delayed velocity copying
-    extraBallSpawnTime.value = Date.now();
-    
-    // Get current main ball state
-    const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
-    
-    // Spawn the number of extra balls we have power-ups for (max 5)
-    const ballsToSpawn = Math.min(extraBallPowerUps.value, 5);
-    
-    for (let i = 0; i < ballsToSpawn; i++) {
-      const extraBall = allExtraBalls[i];
-      
-      // Position near paddle to trigger immediate collision
-      const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
-      const paddleY = rectangleObject.y.value;
-      
-      extraBall.x.value = rectangleObject.x.value + (rectangleObject.width / 2) + offsetX;
-      extraBall.y.value = paddleY - RADIUS + 2; // Position just touching the paddle top
-      
-      // Set initial velocity - will be modified by paddle collision
-      extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 0.5;
-      extraBall.vy = Math.abs(circleObject.vy) * 0.8; // Downward velocity to hit paddle
-      
-      // Copy acceleration
-      extraBall.ax = circleObject.ax;
-      extraBall.ay = circleObject.ay;
-    }
-  };
-
-  // Save recent score function
-  const saveRecentScore = async (finalScore: number, finalRound: number) => {
-    try {
-      const existingScores = await AsyncStorage.getItem('recentScores');
-      const scores = existingScores ? JSON.parse(existingScores) : [];
-      
-      const newScore = {
-        score: finalScore,
-        round: finalRound,
-        date: new Date().toISOString(),
-      };
-      
-      scores.unshift(newScore);
-      
-      // Keep only the last 10 scores
-      if (scores.length > 10) {
-        scores.splice(10);
-      }
-      
-      await AsyncStorage.setItem('recentScores', JSON.stringify(scores));
-    } catch (error) {
-      console.error('Error saving recent score:', error);
-    }
-  };
-
   // Watch for score saving trigger
   useEffect(() => {
     const checkSaveScore = () => {
-      if (shouldSaveScore.value) {
-        saveRecentScore(finalScoreToSave.value, finalRoundToSave.value);
-        shouldSaveScore.value = false;
+      if (gameState.shouldSaveScore.value) {
+        saveRecentScore(gameState.finalScoreToSave.value, gameState.finalRoundToSave.value);
+        gameState.shouldSaveScore.value = false;
       }
     };
     
@@ -509,9 +185,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Watch for game end trigger
   useEffect(() => {
     const checkGameEnd = () => {
-      if (shouldTriggerGameEnd.value) {
-        onGameEnd(finalScoreToSave.value, gameWon.value);
-        shouldTriggerGameEnd.value = false;
+      if (gameState.shouldTriggerGameEnd.value) {
+        onGameEnd(gameState.finalScoreToSave.value, gameState.gameWon.value);
+        gameState.shouldTriggerGameEnd.value = false;
       }
     };
     
@@ -524,69 +200,49 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (!frameInfo.timeSincePreviousFrame) return;
     
     // Check if 100ms has passed since extra balls spawned and copy main ball velocity
-    if (extraBallSpawnTime.value > 0 && Date.now() - extraBallSpawnTime.value >= 50 && !shouldCopyVelocity.value) {
-      shouldCopyVelocity.value = true;
-      
-      // Calculate main ball's speed and direction
-      const mainSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
-      const mainAngle = Math.atan2(circleObject.vy, circleObject.vx);
-      
-      // Copy velocity with random angle variations while maintaining speed
-      for (const extraBall of allExtraBalls) {
-        if (extraBall.x.value > -50) { // Only copy to visible/active extra balls
-          // Add random angle variation (±30 degrees)
-          const angleVariation = (Math.random() - 0.5) * (Math.PI / 1.5); // ±60 degrees in radians
-          const newAngle = mainAngle + angleVariation;
-          
-          // Apply the same speed but with the new angle
-          extraBall.vx = Math.cos(newAngle) * mainSpeed;
-          extraBall.vy = Math.sin(newAngle) * mainSpeed;
-          extraBall.ax = circleObject.ax;
-          extraBall.ay = circleObject.ay;
-        }
-      }
-      
-      // Reset the spawn time to prevent repeated copying
-      extraBallSpawnTime.value = 0;
+    if (gameState.extraBallSpawnTime.value > 0 && Date.now() - gameState.extraBallSpawnTime.value >= 50 && !gameState.shouldCopyVelocity.value) {
+      gameState.shouldCopyVelocity.value = true;
+      copyVelocityToExtraBalls();
+      gameState.extraBallSpawnTime.value = 0;
     }
     
     // Check win condition
-    if (brickCount.value >= 5 && !gameEnded.value) {
-      gameEnded.value = true;
+    if (gameState.brickCount.value >= 5 && !gameState.gameEnded.value) {
+      gameState.gameEnded.value = true;
       // Save score to recent scores
-      finalScoreToSave.value = score.value;
-      finalRoundToSave.value = round;
-      gameWon.value = true;
-      shouldSaveScore.value = true;
-      shouldTriggerGameEnd.value = true;
+      gameState.finalScoreToSave.value = gameState.score.value;
+      gameState.finalRoundToSave.value = round;
+      gameState.gameWon.value = true;
+      gameState.shouldSaveScore.value = true;
+      gameState.shouldTriggerGameEnd.value = true;
       return;
     }
     
     // Check lose condition
     if (
-      brickCount.value === -1 && !gameEnded.value
+      gameState.brickCount.value === -1 && !gameState.gameEnded.value
     ) {
       // Check if player has more than 1 life
-      if (currentLives.value > 1) {
+      if (gameState.currentLives.value > 1) {
         // Subtract a life and respawn
-        currentLives.value = currentLives.value - 1;
-        newLivesCount.value = currentLives.value;
-        shouldUpdateLives.value = true;
-        brickCount.value = 0; // Reset brick count to continue game
+        gameState.currentLives.value = gameState.currentLives.value - 1;
+        gameState.newLivesCount.value = gameState.currentLives.value;
+        gameState.shouldUpdateLives.value = true;
+        gameState.brickCount.value = 0; // Reset brick count to continue game
         respawnBall();
       } else {
         // Game over - no lives left
-        gameEnded.value = true;
-        finalScoreToSave.value = score.value;
-        finalRoundToSave.value = round;
-        gameWon.value = false;
-        shouldSaveScore.value = true;
-        shouldTriggerGameEnd.value = true;
+        gameState.gameEnded.value = true;
+        gameState.finalScoreToSave.value = gameState.score.value;
+        gameState.finalRoundToSave.value = round;
+        gameState.gameWon.value = false;
+        gameState.shouldSaveScore.value = true;
+        gameState.shouldTriggerGameEnd.value = true;
         return;
       }
     }
     
-    if (gameEnded.value) {
+    if (gameState.gameEnded.value) {
       return;
     }
     
@@ -596,20 +252,20 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     animate(
       [...activeBalls, rectangleObject, ...bricks],
       frameInfo.timeSincePreviousFrame,
-      brickCount,
-      score,
-      hapticEnabled,
-      currentMaxSpeed,
-      scoreMultiplier,
+      gameState.brickCount,
+      gameState.score,
+      gameState.hapticEnabled,
+      gameState.currentMaxSpeed,
+      gameState.scoreMultiplier,
       spawnExtraBalls,
-      hasUsedExtraBalls
+      gameState.hasUsedExtraBalls
     );
   });
 
   // Paddle drag gesture
   const gesture = Gesture.Pan()
     .onBegin(() => {
-      if (gameEnded.value) {
+      if (gameState.gameEnded.value) {
         resetGame();
       }
     })
@@ -619,16 +275,16 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
 
   // End-of-game overlay values
   const scoreText = useDerivedValue(
-    () => `Score: ${score.value}`,
-    [score]
+    () => `Score: ${gameState.score.value}`,
+    [gameState.score]
   );
   const roundText = useDerivedValue(
     () => `Round ${round}`,
     [round]
   );
   const livesText = useDerivedValue(
-    () => `Lives: ${currentLives.value}`,
-    [currentLives]
+    () => `Lives: ${gameState.currentLives.value}`,
+    [gameState.currentLives]
   );
   const uniforms = useDerivedValue(
     () => ({
