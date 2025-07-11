@@ -54,7 +54,7 @@ export const resolveCollisionWithBounce = (info: Collision, hapticEnabled: Share
   }
 
   // Get rectangle dimensions based on type
-  const rectWidth = rectInfo.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
+  const rectWidth = rectInfo.type === "Paddle" ? rectInfo.width : BRICK_WIDTH;
   const rectHeight = rectInfo.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
   const ballX = circleInfo.x.value;

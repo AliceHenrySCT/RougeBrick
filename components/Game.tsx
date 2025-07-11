@@ -49,6 +49,7 @@ interface GameProps {
   extraBalls: number;
   onExtraBallsChange: (extraBalls: number) => void;
   speedBoostCount: number;
+  difficulty: 'easy' | 'normal' | 'hard';
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -137,6 +138,32 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
   const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
   const currentMaxSpeed = useSharedValue(MAX_SPEED + (speedBoostCount * 5)); // Dynamic max speed
+  
+  // Calculate difficulty-adjusted values
+  const getDifficultyAdjustedSpeed = (baseSpeed: number) => {
+    switch (difficulty) {
+      case 'easy':
+        return baseSpeed - 15;
+      case 'hard':
+        return baseSpeed + 15;
+      default:
+        return baseSpeed;
+    }
+  };
+  
+  const getDifficultyAdjustedPaddleWidth = () => {
+    switch (difficulty) {
+      case 'easy':
+        return PADDLE_WIDTH * 1.2; // 20% wider
+      case 'hard':
+        return PADDLE_WIDTH * 0.8; // 20% narrower
+      default:
+        return PADDLE_WIDTH;
+    }
+  };
+  
+  const adjustedPaddleWidth = getDifficultyAdjustedPaddleWidth();
+  const adjustedPaddleMiddle = width / 2 - adjustedPaddleWidth / 2;
   
   // Create extra ball objects (max 5 for simplicity)
   const extraBall1: CircleInterface = {
@@ -234,7 +261,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     currentLives.value = lives;
     extraBallPowerUps.value = extraBalls;
     hasUsedExtraBalls.value = false;
-    currentMaxSpeed.value = MAX_SPEED + (speedBoostCount * 5);
+    currentMaxSpeed.value = getDifficultyAdjustedSpeed(MAX_SPEED + (speedBoostCount * 5));
   }, [lives, extraBalls, speedBoostCount]);
 
   // Watch for haptic trigger changes
@@ -294,14 +321,14 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const rectangleObject: PaddleInterface = {
     type: 'Paddle',
     id: 0,
-    x: useSharedValue(PADDLE_MIDDLE),
+    x: useSharedValue(adjustedPaddleMiddle),
     y: useSharedValue(height - 100),
     m: 0,
     ax: 0,
     ay: 0,
     vx: 0,
     vy: 0,
-    width: PADDLE_WIDTH,
+    width: adjustedPaddleWidth,
     height: PADDLE_HEIGHT,
   };
 
@@ -332,7 +359,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Reset game to initial state
   const resetGame = () => {
     'worklet';
-    rectangleObject.x.value = PADDLE_MIDDLE;
+    rectangleObject.x.value = adjustedPaddleMiddle;
     createBouncingExample(circleObject);
     
     // Reset extra ball timing flags
@@ -359,7 +386,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Respawn ball without resetting bricks
   const respawnBall = () => {
     'worklet';
-    rectangleObject.x.value = PADDLE_MIDDLE;
+    rectangleObject.x.value = adjustedPaddleMiddle;
     createBouncingExample(circleObject);
     
     // Reset extra ball timing flags
@@ -566,7 +593,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       }
     })
     .onChange(({ x }) => {
-      rectangleObject.x.value = x - PADDLE_WIDTH / 2;
+      rectangleObject.x.value = x - adjustedPaddleWidth / 2;
     });
 
   // End-of-game overlay values

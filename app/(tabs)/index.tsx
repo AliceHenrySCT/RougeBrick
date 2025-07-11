@@ -20,6 +20,7 @@ export default function PlayTab() {
   const [extraBalls, setExtraBalls] = useState(0);
   const [extraLifeUsageCount, setExtraLifeUsageCount] = useState(0);
   const [speedBoostCount, setSpeedBoostCount] = useState(0);
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function PlayTab() {
     
     // Load high score
     loadHighScore();
+    loadDifficulty();
     
     return () => {
       // Restore UI when leaving
@@ -45,6 +47,17 @@ export default function PlayTab() {
       }
     } catch (error) {
       console.error('Error loading high score:', error);
+    }
+  };
+
+  const loadDifficulty = async () => {
+    try {
+      const savedDifficulty = await AsyncStorage.getItem('difficulty');
+      if (savedDifficulty) {
+        setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
+      }
+    } catch (error) {
+      console.error('Error loading difficulty:', error);
     }
   };
 
@@ -127,6 +140,7 @@ export default function PlayTab() {
         extraBalls={extraBalls}
         onExtraBallsChange={handleExtraBallsChange}
         speedBoostCount={speedBoostCount}
+        difficulty={difficulty}
       />
     );
   }
