@@ -15,7 +15,7 @@ export default function PlayTab() {
   const [currentScore, setCurrentScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [round, setRound] = useState(1);
-  const [lives, setLives] = useState(3);
+  const [lives, setLives] = useState(1);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
   const [extraBalls, setExtraBalls] = useState(0);
   const { setTabsVisible } = useTabVisibility();
@@ -72,7 +72,7 @@ export default function PlayTab() {
   const startNewGame = () => {
     setCurrentScore(0);
     setRound(1);
-    setLives(3);
+    setLives(1);
     setExtraBalls(0);
     setGameState('playing');
   };
@@ -83,7 +83,7 @@ export default function PlayTab() {
     
     // Apply power-up effects
     if (selectedPowerUp === 'shield') {
-      setLives(prev => prev + 1); // Extra life power-up
+      setLives(prev => Math.min(prev + 1, 3)); // Extra life power-up (max 3)
     } else if (selectedPowerUp === 'extraBall') {
       setExtraBalls(prev => Math.min(prev + 1, 9)); // Extra ball power-up (cap at 9 for 10 total)
     }
@@ -94,7 +94,7 @@ export default function PlayTab() {
   const backToMenu = () => {
     setGameState('menu');
     setRound(1);
-    setLives(3);
+    setLives(1);
     setExtraBalls(0);
   };
 
@@ -133,16 +133,18 @@ export default function PlayTab() {
       {
         id: 'shield' as const,
         name: 'Extra Life',
-        description: 'One free miss',
+        description: `One free miss (${lives}/3)`,
         icon: Shield,
         color: '#00FF00',
+        disabled: lives >= 3,
       },
       {
         id: 'extraBall' as const,
         name: 'Extra Ball',
-        description: 'Spawn additional ball',
+        description: `Spawn additional ball (${extraBalls}/9)`,
         icon: Circle,
         color: '#FF6B6B',
+        disabled: extraBalls >= 9,
       },
     ];
 
@@ -166,6 +168,7 @@ export default function PlayTab() {
             {powerUps.map((powerUp) => {
               const IconComponent = powerUp.icon;
               const isSelected = selectedPowerUp === powerUp.id;
+              const isDisabled = powerUp.disabled;
               
               return (
                 <TouchableOpacity
@@ -173,21 +176,27 @@ export default function PlayTab() {
                   style={[
                     styles.powerUpBox,
                     isSelected && styles.powerUpBoxSelected,
-                    { borderColor: powerUp.color }
+                    { borderColor: powerUp.color },
+                    isDisabled && styles.powerUpBoxDisabled
                   ]}
-                  onPress={() => setSelectedPowerUp(powerUp.id)}
+                  onPress={() => !isDisabled && setSelectedPowerUp(powerUp.id)}
+                  disabled={isDisabled}
                 >
                   <IconComponent 
                     size={32} 
-                    color={isSelected ? powerUp.color : '#666'} 
+                    color={isDisabled ? '#333' : (isSelected ? powerUp.color : '#666')} 
                   />
                   <Text style={[
                     styles.powerUpName,
-                    isSelected && { color: powerUp.color }
+                    isSelected && { color: powerUp.color },
+                    isDisabled && { color: '#333' }
                   ]}>
                     {powerUp.name}
                   </Text>
-                  <Text style={styles.powerUpDescription}>
+                  <Text style={[
+                    styles.powerUpDescription,
+                    isDisabled && { color: '#333' }
+                  ]}>
                     {powerUp.description}
                   </Text>
                 </TouchableOpacity>
@@ -372,6 +381,10 @@ const styles = StyleSheet.create({
   powerUpBoxSelected: {
     backgroundColor: '#2a2a2a',
     transform: [{ scale: 1.05 }],
+  },
+  powerUpBoxDisabled: {
+    backgroundColor: '#0a0a0a',
+    opacity: 0.5,
   },
   powerUpName: {
     fontSize: 14,
