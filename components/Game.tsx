@@ -333,29 +333,27 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     // Force spawn extra balls if we have power-ups
     if (extraBallPowerUps.value > 0) {
       console.log('FORCING EXTRA BALL SPAWN AT GAME START');
-      console.log('Main ball position:', circleObject.x.value, circleObject.y.value);
-      console.log('Main ball velocity:', circleObject.vx, circleObject.vy);
       
-      // Spawn extra balls near main ball with same velocity
+      // Spawn extra balls near paddle to trigger immediate collision
       for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
         const extraBall = allExtraBalls[i];
         
-        // Position near main ball, offset by RADIUS
+        // Position near paddle to trigger immediate collision
         const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
-        const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
+        const paddleY = rectangleObject.y.value;
         
-        extraBall.x.value = circleObject.x.value + offsetX;
-        extraBall.y.value = circleObject.y.value + offsetY;
+        extraBall.x.value = rectangleObject.x.value + (rectangleObject.width / 2) + offsetX;
+        extraBall.y.value = paddleY - RADIUS + 2; // Position just touching the paddle top
         
-        // Same velocity as main ball
-        extraBall.vx = circleObject.vx;
-        extraBall.vy = circleObject.vy;
+        // Set initial velocity - will be modified by paddle collision
+        extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 0.5;
+        extraBall.vy = Math.abs(circleObject.vy) * 0.8; // Downward velocity to hit paddle
         
-        // Same acceleration as main ball
+        // Copy acceleration
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+        console.log(`FORCED SPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -386,26 +384,26 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (extraBallPowerUps.value > 0) {
       console.log('FORCING EXTRA BALL SPAWN AT RESPAWN');
       
-      // Spawn extra balls near main ball with same velocity
+      // Spawn extra balls near paddle to trigger immediate collision
       for (let i = 0; i < Math.min(extraBallPowerUps.value, 5); i++) {
         const extraBall = allExtraBalls[i];
         
-        // Position near main ball, offset by RADIUS
+        // Position near paddle to trigger immediate collision
         const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
-        const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
+        const paddleY = rectangleObject.y.value;
         
-        extraBall.x.value = circleObject.x.value + offsetX;
-        extraBall.y.value = circleObject.y.value + offsetY;
+        extraBall.x.value = rectangleObject.x.value + (rectangleObject.width / 2) + offsetX;
+        extraBall.y.value = paddleY - RADIUS + 2; // Position just touching the paddle top
         
-        // Same velocity as main ball
-        extraBall.vx = circleObject.vx;
-        extraBall.vy = circleObject.vy;
+        // Set initial velocity - will be modified by paddle collision
+        extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 0.5;
+        extraBall.vy = Math.abs(circleObject.vy) * 0.8; // Downward velocity to hit paddle
         
-        // Same acceleration as main ball
+        // Copy acceleration
         extraBall.ax = circleObject.ax;
         extraBall.ay = circleObject.ay;
         
-        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value}) with velocity (${extraBall.vx}, ${extraBall.vy})`);
+        console.log(`FORCED RESPAWN: Extra ball ${i + 1} at (${extraBall.x.value}, ${extraBall.y.value})`);
       }
     } else {
       // Reset all extra balls if no power-ups
@@ -450,39 +448,24 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = allExtraBalls[i];
       
-      // Position near main ball location, offset by RADIUS
+      // Position near paddle to trigger immediate collision
       const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
-      const offsetY = (2.5 * RADIUS);
+      const paddleY = rectangleObject.y.value;
       
-      extraBall.x.value = circleObject.x.value + offsetX;
-      extraBall.y.value = circleObject.y.value - offsetY;
+      extraBall.x.value = rectangleObject.x.value + (rectangleObject.width / 2) + offsetX;
+      extraBall.y.value = paddleY - RADIUS + 2; // Position just touching the paddle top
       
       console.log(`Extra ball ${i + 1} positioned at: x=${extraBall.x.value}, y=${extraBall.y.value}`);
       
-      // Copy exact velocity from main ball
-      extraBall.vx = circleObject.vx;
-      extraBall.vy = circleObject.vy;
+      // Set initial velocity - will be modified by paddle collision
+      extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 0.5;
+      extraBall.vy = Math.abs(circleObject.vy) * 0.8; // Downward velocity to hit paddle
       
       // Copy acceleration
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
       
       console.log(`Extra ball ${i + 1}: vx=${extraBall.vx}, vy=${extraBall.vy}`);
-      
-      // Trigger fake collision to randomize velocity
-      const fakeCollision = {
-        o1: extraBall,
-        o2: rectangleObject, // Use paddle as fake collision target
-        dx: 0,
-        dy: 0,
-        d: 0
-      };
-      
-      // Apply randomized velocity using existing collision logic
-      extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 1.2;
-      extraBall.vy = (Math.random() - 0.5) * MAX_SPEED * 1.2;
-      
-      console.log(`Extra ball ${i + 1} randomized velocity: vx=${extraBall.vx}, vy=${extraBall.vy}`);
     }
   };
 
