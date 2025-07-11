@@ -318,7 +318,7 @@ export const animate = (
   }
 
   for (const col of collisions) {
-    // Trigger extra ball spawning on first paddle hit
+    // Trigger extra ball spawning on first paddle hit (only for main ball)
     if (col.o2.type === "Paddle" && spawnExtraBalls && hasSpawnedExtraBalls && !hasSpawnedExtraBalls.value && col.o1.id === 0) {
       spawnExtraBalls();
     }
