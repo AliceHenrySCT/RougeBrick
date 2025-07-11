@@ -92,11 +92,6 @@ export const resolveCollisionWithBounce = (info: Collision, hapticEnabled: Share
       if (circleInfo.vx > MAX_SPEED * 0.8) circleInfo.vx = MAX_SPEED * 0.8;
       if (circleInfo.vx < -MAX_SPEED * 0.8) circleInfo.vx = -MAX_SPEED * 0.8;
       
-      // For extra balls (id > 0), randomize velocity on paddle hit
-      if (circleInfo.id > 0) {
-        circleInfo.vx = (Math.random() - 0.5) * MAX_SPEED * 0.8;
-      }
-      
       // Set haptic trigger for paddle hit
       if (hapticEnabled.value) {
         hapticEnabled.value = false; // Temporarily disable to trigger effect
@@ -113,41 +108,24 @@ export const resolveCollisionWithBounce = (info: Collision, hapticEnabled: Share
     circleInfo.x.value = rectLeft - RADIUS - 1;
     circleInfo.vx = -Math.abs(circleInfo.vx);
     circleInfo.ax = -Math.abs(circleInfo.ax);
-    
-    // For extra balls, randomize x velocity on vertical collision
-    if (circleInfo.id > 0) {
-      circleInfo.vx = (Math.random() - 0.5) * MAX_SPEED * 0.8;
-    }
   } else if (minDist === distToRight) {
     // Hit right side
     circleInfo.x.value = rectRight + RADIUS + 1;
     circleInfo.vx = Math.abs(circleInfo.vx);
     circleInfo.ax = Math.abs(circleInfo.ax);
-    
-    // For extra balls, randomize x velocity on vertical collision
-    if (circleInfo.id > 0) {
-      circleInfo.vx = (Math.random() - 0.5) * MAX_SPEED * 0.8;
-    }
+
   } else if (minDist === distToTop) {
     // Hit top side
     circleInfo.y.value = rectTop - RADIUS - 1;
     circleInfo.vy = -Math.abs(circleInfo.vy);
     circleInfo.ay = -Math.abs(circleInfo.ay);
     
-    // For extra balls, randomize y velocity on horizontal collision
-    if (circleInfo.id > 0) {
-      circleInfo.vy = (Math.random() - 0.5) * MAX_SPEED * 0.8;
-    }
   } else {
     // Hit bottom side
     circleInfo.y.value = rectBottom + RADIUS + 1;
     circleInfo.vy = Math.abs(circleInfo.vy);
     circleInfo.ay = Math.abs(circleInfo.ay);
     
-    // For extra balls, randomize y velocity on horizontal collision
-    if (circleInfo.id > 0) {
-      circleInfo.vy = (Math.random() - 0.5) * MAX_SPEED * 0.8;
-    }
   }
 };
 
@@ -316,8 +294,6 @@ export const animate = (
   for (const o of objects) {
     move(o, (0.15 / 16) * timeSincePreviousFrame);
   }
-
-  // Trigger extra ball spawning after first brick hit
 
   for (const o of objects) {
     if (o.type === "Circle") {
