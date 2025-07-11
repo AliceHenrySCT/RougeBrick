@@ -54,7 +54,7 @@ export const resolveCollisionWithBounce = (info: Collision, hapticEnabled: Share
   }
 
   // Get rectangle dimensions based on type
-  const rectWidth = rectInfo.type === "Paddle" ? rectInfo.width : BRICK_WIDTH;
+  const rectWidth = rectInfo.type === "Paddle" ? (rectInfo as PaddleInterface).width : BRICK_WIDTH;
   const rectHeight = rectInfo.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
   const ballX = circleInfo.x.value;
@@ -242,7 +242,7 @@ export const checkCollision = (o1: ShapeInterface, o2: ShapeInterface) => {
     const rectObj = o2 as PaddleInterface | BrickInterface;
 
     // Use appropriate dimensions based on object type
-    const rectWidth = o2.type === "Paddle" ? PADDLE_WIDTH : BRICK_WIDTH;
+    const rectWidth = o2.type === "Paddle" ? (o2 as PaddleInterface).width : BRICK_WIDTH;
     const rectHeight = o2.type === "Paddle" ? PADDLE_HEIGHT : BRICK_HEIGHT;
 
     // For paddle collisions, add velocity check to prevent sticking
