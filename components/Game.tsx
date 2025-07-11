@@ -541,14 +541,23 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (extraBallSpawnTime.value > 0 && Date.now() - extraBallSpawnTime.value >= 50 && !shouldCopyVelocity.value) {
       shouldCopyVelocity.value = true;
       
-      // Copy main ball's velocity and acceleration to all active extra balls
+      // Calculate main ball's speed and direction
+      const mainSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
+      const mainAngle = Math.atan2(circleObject.vy, circleObject.vx);
+      
+      // Copy velocity with random angle variations while maintaining speed
       for (const extraBall of allExtraBalls) {
         if (extraBall.x.value > -50) { // Only copy to visible/active extra balls
-          extraBall.vx = circleObject.vx;
-          extraBall.vy = circleObject.vy;
+          // Add random angle variation (±30 degrees)
+          const angleVariation = (Math.random() - 0.5) * (Math.PI / 3); // ±30 degrees in radians
+          const newAngle = mainAngle + angleVariation;
+          
+          // Apply the same speed but with the new angle
+          extraBall.vx = Math.cos(newAngle) * mainSpeed;
+          extraBall.vy = Math.sin(newAngle) * mainSpeed;
           extraBall.ax = circleObject.ax;
           extraBall.ay = circleObject.ay;
-          console.log(`Copied velocity to extra ball ${extraBall.id}: vx=${extraBall.vx}, vy=${extraBall.vy}`);
+          console.log(`Copied velocity with angle variation to extra ball ${extraBall.id}: vx=${extraBall.vx}, vy=${extraBall.vy}, angle=${newAngle * 180 / Math.PI}°`);
         }
       }
       
