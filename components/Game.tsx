@@ -133,6 +133,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Extra ball system - rebuilt from scratch
   const extraBallPowerUps = useSharedValue(extraBalls); // Number of extra ball power-ups available
   const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
+  const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
+  const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
   
   // Create extra ball objects (max 5 for simplicity)
   const extraBall1: CircleInterface = {
@@ -330,6 +332,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
     
+    // Reset extra ball timing flags
+    extraBallSpawnTime.value = 0;
+    shouldCopyVelocity.value = false;
+    
     // Force spawn extra balls if we have power-ups
     if (extraBallPowerUps.value > 0) {
       console.log('FORCING EXTRA BALL SPAWN AT GAME START');
@@ -379,6 +385,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     'worklet';
     rectangleObject.x.value = PADDLE_MIDDLE;
     createBouncingExample(circleObject);
+    
+    // Reset extra ball timing flags
+    extraBallSpawnTime.value = 0;
+    shouldCopyVelocity.value = false;
     
     // Force spawn extra balls if we have power-ups
     if (extraBallPowerUps.value > 0) {
@@ -436,6 +446,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     // Mark as used
     hasUsedExtraBalls.value = true;
+    
+    // Record spawn time for delayed velocity copying
+    extraBallSpawnTime.value = Date.now();
     
     // Get current main ball state
     const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
@@ -523,6 +536,25 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Game loop: animate physics each frame
   useFrameCallback((frameInfo) => {
     if (!frameInfo.timeSincePreviousFrame) return;
+    
+    // Check if 100ms has passed since extra balls spawned and copy main ball velocity
+    if (extraBallSpawnTime.value > 0 && Date.now() - extraBallSpawnTime.value >= 100 && !shouldCopyVelocity.value) {
+      shouldCopyVelocity.value = true;
+      
+      // Copy main ball's velocity and acceleration to all active extra balls
+      for (const extraBall of allExtraBalls) {
+        if (extraBall.x.value > -50) { // Only copy to visible/active extra balls
+          extraBall.vx = circleObject.vx;
+          extraBall.vy = circleObject.vy;
+          extraBall.ax = circleObject.ax;
+          extraBall.ay = circleObject.ay;
+          console.log(`Copied velocity to extra ball ${extraBall.id}: vx=${extraBall.vx}, vy=${extraBall.vy}`);
+        }
+      }
+      
+      // Reset the spawn time to prevent repeated copying
+      extraBallSpawnTime.value = 0;
+    }
     
     // Check win condition
     if (brickCount.value >= 5 && !gameEnded.value) {
