@@ -130,7 +130,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
   
-  // Extra ball system - rebuilt from scratch
+  // Extra ball system
   const extraBallPowerUps = useSharedValue(extraBalls); // Number of extra ball power-ups available
   const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
   const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
@@ -380,13 +380,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   // Simple extra ball spawning method
   const spawnExtraBalls = () => {
     'worklet';
-    console.log('=== SPAWN EXTRA BALLS CALLED ===');
-    console.log('Extra ball power-ups available:', extraBallPowerUps.value);
-    console.log('Has used extra balls this round:', hasUsedExtraBalls.value);
     
     // Check if we have power-ups and haven't used them yet
     if (extraBallPowerUps.value <= 0 || hasUsedExtraBalls.value) {
-      console.log('Cannot spawn: no power-ups or already used');
       return;
     }
     
@@ -398,11 +394,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     
     // Get current main ball state
     const mainBallSpeed = Math.sqrt(circleObject.vx * circleObject.vx + circleObject.vy * circleObject.vy);
-    console.log('Main ball speed:', mainBallSpeed);
     
     // Spawn the number of extra balls we have power-ups for (max 5)
     const ballsToSpawn = Math.min(extraBallPowerUps.value, 5);
-    console.log('Spawning', ballsToSpawn, 'extra balls');
     
     for (let i = 0; i < ballsToSpawn; i++) {
       const extraBall = allExtraBalls[i];
@@ -414,8 +408,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       extraBall.x.value = rectangleObject.x.value + (rectangleObject.width / 2) + offsetX;
       extraBall.y.value = paddleY - RADIUS + 2; // Position just touching the paddle top
       
-      console.log(`Extra ball ${i + 1} positioned at: x=${extraBall.x.value}, y=${extraBall.y.value}`);
-      
       // Set initial velocity - will be modified by paddle collision
       extraBall.vx = (Math.random() - 0.5) * MAX_SPEED * 0.5;
       extraBall.vy = Math.abs(circleObject.vy) * 0.8; // Downward velocity to hit paddle
@@ -423,8 +415,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       // Copy acceleration
       extraBall.ax = circleObject.ax;
       extraBall.ay = circleObject.ay;
-      
-      console.log(`Extra ball ${i + 1}: vx=${extraBall.vx}, vy=${extraBall.vy}`);
     }
   };
 
@@ -503,7 +493,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
           extraBall.vy = Math.sin(newAngle) * mainSpeed;
           extraBall.ax = circleObject.ax;
           extraBall.ay = circleObject.ay;
-          console.log(`Copied velocity with angle variation to extra ball ${extraBall.id}: vx=${extraBall.vx}, vy=${extraBall.vy}, angle=${newAngle * 180 / Math.PI}°`);
         }
       }
       

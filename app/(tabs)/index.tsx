@@ -18,6 +18,7 @@ export default function PlayTab() {
   const [lives, setLives] = useState(1);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
   const [extraBalls, setExtraBalls] = useState(0);
+  const [extraLifeUsageCount, setExtraLifeUsageCount] = useState(0);
   const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function PlayTab() {
     setRound(1);
     setLives(1);
     setExtraBalls(0);
+    setExtraLifeUsageCount(0);
     setGameState('playing');
   };
 
@@ -84,6 +86,7 @@ export default function PlayTab() {
     // Apply power-up effects
     if (selectedPowerUp === 'shield') {
       setLives(prev => Math.min(prev + 1, 3)); // Extra life power-up (max 3)
+      setExtraLifeUsageCount(prev => prev + 1);
     } else if (selectedPowerUp === 'extraBall') {
       setExtraBalls(prev => Math.min(prev + 1, 9)); // Extra ball power-up (cap at 9 for 10 total)
     }
@@ -96,6 +99,7 @@ export default function PlayTab() {
     setRound(1);
     setLives(1);
     setExtraBalls(0);
+    setExtraLifeUsageCount(0);
   };
 
   const handleLivesChange = (newLives: number) => {
@@ -133,10 +137,10 @@ export default function PlayTab() {
       {
         id: 'shield' as const,
         name: 'Extra Life',
-        description: `One free miss (${lives}/3)`,
+        description: `One free miss (${extraLifeUsageCount}/3)`,
         icon: Shield,
         color: '#00FF00',
-        disabled: lives >= 3,
+        disabled: extraLifeUsageCount >= 3,
       },
       {
         id: 'extraBall' as const,
