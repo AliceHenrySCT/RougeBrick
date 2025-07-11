@@ -549,7 +549,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       for (const extraBall of allExtraBalls) {
         if (extraBall.x.value > -50) { // Only copy to visible/active extra balls
           // Add random angle variation (±30 degrees)
-          const angleVariation = (Math.random() - 0.5) * (Math.PI / 3); // ±30 degrees in radians
+          const angleVariation = (Math.random() - 0.5) * (Math.PI / 1.5); // ±60 degrees in radians
           const newAngle = mainAngle + angleVariation;
           
           // Apply the same speed but with the new angle
