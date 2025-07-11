@@ -7,6 +7,8 @@ import { StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTabVisibility } from './_layout';
 import { Zap, Shield, Circle } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 type PowerUp = 'speed' | 'shield' | 'extraBall' | null;
 
@@ -20,7 +22,26 @@ export default function PlayTab() {
   const [extraBalls, setExtraBalls] = useState(0);
   const [extraLifeUsageCount, setExtraLifeUsageCount] = useState(0);
   const [speedBoostCount, setSpeedBoostCount] = useState(0);
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const { setTabsVisible } = useTabVisibility();
+
+  // Load difficulty setting when tab comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      const loadDifficulty = async () => {
+        try {
+          const savedDifficulty = await AsyncStorage.getItem('difficulty');
+          if (savedDifficulty) {
+            setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
+          }
+        } catch (error) {
+          console.error('Error loading difficulty:', error);
+        }
+      };
+      
+      loadDifficulty();
+    }, [])
+  );
 
   useEffect(() => {
     // Hide Android bottom nav bar and status bar for immersive gaming
@@ -128,6 +149,7 @@ export default function PlayTab() {
         extraBalls={extraBalls}
         onExtraBallsChange={handleExtraBallsChange}
         speedBoostCount={speedBoostCount}
+        difficulty={difficulty}
       />
     );
   }

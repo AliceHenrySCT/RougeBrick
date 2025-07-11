@@ -50,6 +50,7 @@ interface GameProps {
   onExtraBallsChange: (extraBalls: number) => void;
   speedBoostCount: number;
   difficulty: 'easy' | 'normal' | 'hard';
+  difficulty: 'easy' | 'normal' | 'hard';
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -117,7 +118,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange, speedBoostCount }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange, speedBoostCount, difficulty }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const currentLives = useSharedValue(lives);
@@ -141,24 +142,6 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
   const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
   const currentMaxSpeed = useSharedValue(MAX_SPEED + (speedBoostCount * 5)); // Dynamic max speed
-  
-  // Load difficulty setting from AsyncStorage
-  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
-  
-  useEffect(() => {
-    const loadDifficulty = async () => {
-      try {
-        const savedDifficulty = await AsyncStorage.getItem('difficulty');
-        if (savedDifficulty) {
-          setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
-        }
-      } catch (error) {
-        console.error('Error loading difficulty:', error);
-      }
-    };
-    
-    loadDifficulty();
-  }, []);
   
   // Calculate difficulty-adjusted values
   const getDifficultyAdjustedSpeed = (baseSpeed: number) => {
@@ -294,8 +277,12 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     extraBallPowerUps.value = extraBalls;
     hasUsedExtraBalls.value = false;
     currentMaxSpeed.value = getDifficultyAdjustedSpeed(MAX_SPEED + (speedBoostCount * 5));
-    scoreMultiplier.value = getDifficultyScoreMultiplier();
   }, [lives, extraBalls, speedBoostCount]);
+
+  // Update score multiplier when difficulty changes
+  useEffect(() => {
+    scoreMultiplier.value = getDifficultyScoreMultiplier();
+  }, [difficulty]);
 
   // Watch for haptic trigger changes
   useEffect(() => {
