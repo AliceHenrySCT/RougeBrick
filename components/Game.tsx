@@ -139,6 +139,24 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
   const currentMaxSpeed = useSharedValue(MAX_SPEED + (speedBoostCount * 5)); // Dynamic max speed
   
+  // Load difficulty setting from AsyncStorage
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
+  
+  useEffect(() => {
+    const loadDifficulty = async () => {
+      try {
+        const savedDifficulty = await AsyncStorage.getItem('difficulty');
+        if (savedDifficulty) {
+          setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
+        }
+      } catch (error) {
+        console.error('Error loading difficulty:', error);
+      }
+    };
+    
+    loadDifficulty();
+  }, []);
+  
   // Calculate difficulty-adjusted values
   const getDifficultyAdjustedSpeed = (baseSpeed: number) => {
     switch (difficulty) {
