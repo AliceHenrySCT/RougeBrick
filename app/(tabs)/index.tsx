@@ -163,11 +163,6 @@ export default function PlayTab() {
         
         <View style={styles.powerUpSection}>
           <Text style={styles.powerUpTitle}>Choose Your Power-Up</Text>
-          {extraBalls > 0 && (
-            <Text style={styles.extraBallsInfo}>
-              Extra Balls: {extraBalls} (Total: {extraBalls + 1})
-            </Text>
-          )}
           <View style={styles.powerUpContainer}>
             {powerUps.map((powerUp) => {
               const IconComponent = powerUp.icon;
