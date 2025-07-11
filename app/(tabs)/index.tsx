@@ -28,7 +28,29 @@ export default function PlayTab() {
     NavigationBar.setVisibilityAsync('hidden');
     StatusBar.setHidden(true, 'fade');
     
-    // Load high score
+    // Load high score and difficulty
+    const loadHighScore = async () => {
+      try {
+        const savedHighScore = await AsyncStorage.getItem('highScore');
+        if (savedHighScore) {
+          setHighScore(parseInt(savedHighScore));
+        }
+      } catch (error) {
+        console.error('Error loading high score:', error);
+      }
+    };
+
+    const loadDifficulty = async () => {
+      try {
+        const savedDifficulty = await AsyncStorage.getItem('difficulty');
+        if (savedDifficulty) {
+          setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
+        }
+      } catch (error) {
+        console.error('Error loading difficulty:', error);
+      }
+    };
+
     loadHighScore();
     loadDifficulty();
     
@@ -38,28 +60,6 @@ export default function PlayTab() {
       StatusBar.setHidden(false, 'fade');
     };
   }, []);
-
-  const loadHighScore = async () => {
-    try {
-      const savedHighScore = await AsyncStorage.getItem('highScore');
-      if (savedHighScore) {
-        setHighScore(parseInt(savedHighScore));
-      }
-    } catch (error) {
-      console.error('Error loading high score:', error);
-    }
-  };
-
-  const loadDifficulty = async () => {
-    try {
-      const savedDifficulty = await AsyncStorage.getItem('difficulty');
-      if (savedDifficulty) {
-        setDifficulty(savedDifficulty as 'easy' | 'normal' | 'hard');
-      }
-    } catch (error) {
-      console.error('Error loading difficulty:', error);
-    }
-  };
 
   const saveHighScore = async (score: number) => {
     try {
