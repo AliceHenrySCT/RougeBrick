@@ -538,7 +538,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     if (!frameInfo.timeSincePreviousFrame) return;
     
     // Check if 100ms has passed since extra balls spawned and copy main ball velocity
-    if (extraBallSpawnTime.value > 0 && Date.now() - extraBallSpawnTime.value >= 100 && !shouldCopyVelocity.value) {
+    if (extraBallSpawnTime.value > 0 && Date.now() - extraBallSpawnTime.value >= 50 && !shouldCopyVelocity.value) {
       shouldCopyVelocity.value = true;
       
       // Copy main ball's velocity and acceleration to all active extra balls
