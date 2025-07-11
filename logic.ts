@@ -287,6 +287,7 @@ export const animate = (
   score: SharedValue<number>,
   hapticEnabled: SharedValue<boolean>,
   currentMaxSpeed: SharedValue<number>,
+  scoreMultiplier: SharedValue<number>,
   spawnExtraBalls?: () => void,
   hasSpawnedExtraBalls?: SharedValue<boolean>
 ) => {
@@ -326,7 +327,7 @@ export const animate = (
     
     if (col.o2.type === "Brick") {
       brickCount.value++;
-      score.value += 100; // Base score per brick
+      score.value += Math.round(100 * scoreMultiplier.value); // Apply difficulty multiplier
     }
     resolveCollisionWithBounce(col, hapticEnabled);
   }

@@ -132,6 +132,9 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const shouldUpdateLives = useSharedValue(false);
   const newLivesCount = useSharedValue(0);
   
+  // Score multiplier based on difficulty
+  const scoreMultiplier = useSharedValue(1.0);
+  
   // Extra ball system
   const extraBallPowerUps = useSharedValue(extraBalls); // Number of extra ball power-ups available
   const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
@@ -177,6 +180,17 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
         return PADDLE_WIDTH * 0.8; // 20% narrower
       default:
         return PADDLE_WIDTH;
+    }
+  };
+  
+  const getDifficultyScoreMultiplier = () => {
+    switch (difficulty) {
+      case 'easy':
+        return 0.8; // -20% score
+      case 'hard':
+        return 1.2; // +20% score
+      default:
+        return 1.0; // Normal score
     }
   };
   
@@ -280,6 +294,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     extraBallPowerUps.value = extraBalls;
     hasUsedExtraBalls.value = false;
     currentMaxSpeed.value = getDifficultyAdjustedSpeed(MAX_SPEED + (speedBoostCount * 5));
+    scoreMultiplier.value = getDifficultyScoreMultiplier();
   }, [lives, extraBalls, speedBoostCount]);
 
   // Watch for haptic trigger changes
@@ -598,6 +613,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       score,
       hapticEnabled,
       currentMaxSpeed,
+      scoreMultiplier,
       spawnExtraBalls,
       hasUsedExtraBalls
     );
