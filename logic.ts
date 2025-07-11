@@ -12,7 +12,7 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-const move = (object: ShapeInterface, dt: number) => {
+const move = (object: ShapeInterface, dt: number, maxSpeed: number) => {
   "worklet";
   if (object.type === "Circle") {
     object.vx += object.ax * dt;
@@ -20,17 +20,17 @@ const move = (object: ShapeInterface, dt: number) => {
     
     // Only apply speed limits to the main ball (id = 0)
     if (object.id === 0) {
-      if (object.vx > MAX_SPEED) {
-        object.vx = MAX_SPEED;
+      if (object.vx > maxSpeed) {
+        object.vx = maxSpeed;
       }
-      if (object.vx < -MAX_SPEED) {
-        object.vx = -MAX_SPEED;
+      if (object.vx < -maxSpeed) {
+        object.vx = -maxSpeed;
       }
-      if (object.vy > MAX_SPEED) {
-        object.vy = MAX_SPEED;
+      if (object.vy > maxSpeed) {
+        object.vy = maxSpeed;
       }
-      if (object.vy < -MAX_SPEED) {
-        object.vy = -MAX_SPEED;
+      if (object.vy < -maxSpeed) {
+        object.vy = -maxSpeed;
       }
     }
     
@@ -286,13 +286,14 @@ export const animate = (
   brickCount: SharedValue<number>,
   score: SharedValue<number>,
   hapticEnabled: SharedValue<boolean>,
+  currentMaxSpeed: SharedValue<number>,
   spawnExtraBalls?: () => void,
   hasSpawnedExtraBalls?: SharedValue<boolean>
 ) => {
   "worklet";
 
   for (const o of objects) {
-    move(o, (0.15 / 16) * timeSincePreviousFrame);
+    move(o, (0.15 / 16) * timeSincePreviousFrame, currentMaxSpeed.value);
   }
 
   for (const o of objects) {

@@ -48,6 +48,7 @@ interface GameProps {
   onLivesChange: (lives: number) => void;
   extraBalls: number;
   onExtraBallsChange: (extraBalls: number) => void;
+  speedBoostCount: number;
 }
 
 const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
@@ -115,7 +116,7 @@ const Brick = ({ idx, brick }: { idx: number; brick: BrickInterface }) => {
 };
 
 // Main Game component
-const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange }) => {
+const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibilityChange, lives, onLivesChange, extraBalls, onExtraBallsChange, speedBoostCount }) => {
   const brickCount = useSharedValue(0);
   const score = useSharedValue(currentScore);
   const currentLives = useSharedValue(lives);
@@ -135,6 +136,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
   const hasUsedExtraBalls = useSharedValue(false); // Whether we've used the power-up this round
   const extraBallSpawnTime = useSharedValue(0); // Track when extra balls were spawned
   const shouldCopyVelocity = useSharedValue(false); // Flag to trigger velocity copying
+  const currentMaxSpeed = useSharedValue(MAX_SPEED + (speedBoostCount * 5)); // Dynamic max speed
   
   // Create extra ball objects (max 5 for simplicity)
   const extraBall1: CircleInterface = {
@@ -232,7 +234,8 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
     currentLives.value = lives;
     extraBallPowerUps.value = extraBalls;
     hasUsedExtraBalls.value = false;
-  }, [lives, extraBalls]);
+    currentMaxSpeed.value = MAX_SPEED + (speedBoostCount * 5);
+  }, [lives, extraBalls, speedBoostCount]);
 
   // Watch for haptic trigger changes
   useEffect(() => {
@@ -549,6 +552,7 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       brickCount,
       score,
       hapticEnabled,
+      currentMaxSpeed,
       spawnExtraBalls,
       hasUsedExtraBalls
     );

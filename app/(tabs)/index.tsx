@@ -19,6 +19,7 @@ export default function PlayTab() {
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUp>(null);
   const [extraBalls, setExtraBalls] = useState(0);
   const [extraLifeUsageCount, setExtraLifeUsageCount] = useState(0);
+  const [speedBoostCount, setSpeedBoostCount] = useState(0);
   const { setTabsVisible } = useTabVisibility();
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export default function PlayTab() {
     setLives(1);
     setExtraBalls(0);
     setExtraLifeUsageCount(0);
+    setSpeedBoostCount(0);
     setGameState('playing');
   };
 
@@ -89,6 +91,8 @@ export default function PlayTab() {
       setExtraLifeUsageCount(prev => prev + 1);
     } else if (selectedPowerUp === 'extraBall') {
       setExtraBalls(prev => Math.min(prev + 1, 9)); // Extra ball power-up (cap at 9 for 10 total)
+    } else if (selectedPowerUp === 'speed') {
+      setSpeedBoostCount(prev => prev + 1);
     }
     
     setGameState('playing');
@@ -100,6 +104,7 @@ export default function PlayTab() {
     setLives(1);
     setExtraBalls(0);
     setExtraLifeUsageCount(0);
+    setSpeedBoostCount(0);
   };
 
   const handleLivesChange = (newLives: number) => {
@@ -121,6 +126,7 @@ export default function PlayTab() {
         onLivesChange={handleLivesChange}
         extraBalls={extraBalls}
         onExtraBallsChange={handleExtraBallsChange}
+        speedBoostCount={speedBoostCount}
       />
     );
   }
@@ -130,7 +136,7 @@ export default function PlayTab() {
       {
         id: 'speed' as const,
         name: 'Speed Boost',
-        description: 'Faster ball movement',
+        description: `Faster ball movement (${speedBoostCount})`,
         icon: Zap,
         color: '#FFD700',
       },
