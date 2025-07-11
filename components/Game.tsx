@@ -452,10 +452,10 @@ const Game: React.FC<GameProps> = ({ onGameEnd, round, currentScore, onTabVisibi
       
       // Position near main ball location, offset by RADIUS
       const offsetX = (i % 2 === 0 ? 1 : -1) * RADIUS * (Math.floor(i / 2) + 1);
-      const offsetY = (i < 2 ? 1 : -1) * RADIUS * (Math.floor(i / 4) + 1);
+      const offsetY = (2.5 * RADIUS);
       
       extraBall.x.value = circleObject.x.value + offsetX;
-      extraBall.y.value = circleObject.y.value + offsetY;
+      extraBall.y.value = circleObject.y.value - offsetY;
       
       console.log(`Extra ball ${i + 1} positioned at: x=${extraBall.x.value}, y=${extraBall.y.value}`);
       
