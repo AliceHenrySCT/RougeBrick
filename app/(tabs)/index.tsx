@@ -141,10 +141,10 @@ export default function PlayTab() {
       {
         id: 'extraBall' as const,
         name: 'Extra Ball',
-        description: `Spawn additional ball (${extraBalls}/9)`,
+        description: `Spawn additional ball (${extraBalls}/5)`,
         icon: Circle,
         color: '#FF6B6B',
-        disabled: extraBalls >= 9,
+        disabled: extraBalls >= 5,
       },
     ];
 
